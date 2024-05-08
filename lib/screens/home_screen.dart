@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:apptv02/providers/expire_provider.dart';
 import 'package:apptv02/providers/movies_provider.dart';
 import 'package:apptv02/providers/series_provider.dart';
@@ -23,8 +25,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   int? focusItem;
   TextStyle style = const TextStyle(
     color: Colors.white,
-    fontWeight: FontWeight.bold,
-    fontSize: 20,
+    // fontWeight: FontWeight.bold,
+    fontSize: 16,
     fontFamilyFallback: ['koulen'],
     shadows: <Shadow>[
       Shadow(
@@ -70,7 +72,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     double seriesDownloadProgress = context.watch<SeriesProvider>().download;
     double moviesDownloadProgress = context.watch<MoviesProvider>().download;
     double tvDownloadProgress = context.watch<TvProvider>().download;
-    // TimeExpire timeExpire = context.watch<ExpireProvider>().timer;
+    TimeExpire timeExpire = context.watch<ExpireProvider>().timer;
     Duration? durationExpire = context.watch<ExpireProvider>().durationExpire;
     return Shortcuts(
       shortcuts: <LogicalKeySet, Intent>{
@@ -106,12 +108,17 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                           }
                         },
                         borderRadius: BorderRadius.circular(10),
-                        onTap: () {
+                        onTap: () async {
                           if (tvDownloadProgress == 100.0) {
                             Navigator.of(context).push(MaterialPageRoute(
                                 builder: (context) => const LiveScreen()));
                           } else if (tvDownloadProgress == 0.0) {
-                            context.read<TvProvider>().init();
+                            Future<bool> isDone =
+                                context.read<TvProvider>().init();
+                            if (await isDone) {
+                              Navigator.of(context).push(MaterialPageRoute(
+                                  builder: (context) => const LiveScreen()));
+                            }
                           }
                         },
                         child: Container(
@@ -198,12 +205,17 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                           }
                         },
                         borderRadius: BorderRadius.circular(10),
-                        onTap: () {
+                        onTap: () async {
                           if (moviesDownloadProgress == 100.0) {
                             Navigator.of(context).push(MaterialPageRoute(
                                 builder: (context) => const MoviesScreen()));
                           } else if (moviesDownloadProgress == 0.0) {
-                            context.read<MoviesProvider>().init();
+                            Future<bool> isDone =
+                                context.read<MoviesProvider>().init();
+                            if (await isDone) {
+                              Navigator.of(context).push(MaterialPageRoute(
+                                  builder: (context) => const MoviesScreen()));
+                            }
                           }
                         },
                         child: Container(
@@ -283,12 +295,17 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                           }
                         },
                         borderRadius: BorderRadius.circular(20),
-                        onTap: () {
+                        onTap: () async {
                           if (seriesDownloadProgress == 100.0) {
                             Navigator.of(context).push(MaterialPageRoute(
                                 builder: (context) => const SeriesScreen()));
                           } else if (seriesDownloadProgress == 0.0) {
-                            context.read<SeriesProvider>().init();
+                            Future<bool> isDone =
+                                context.read<SeriesProvider>().init();
+                            if (await isDone) {
+                              Navigator.of(context).push(MaterialPageRoute(
+                                  builder: (context) => const SeriesScreen()));
+                            }
                           }
                         },
                         child: Container(

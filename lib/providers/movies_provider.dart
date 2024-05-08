@@ -22,7 +22,7 @@ class MoviesProvider extends ChangeNotifier {
   List<M3USeriesItem> get playlistFilter => _playlistFilter;
   double get download => _download;
 
-  void init() async {
+  Future<bool> init() async {
     try {
       List<Cate> cates = [];
       List<M3USeriesItem> series = [];
@@ -71,6 +71,9 @@ class MoviesProvider extends ChangeNotifier {
       _playlistFilter = movies;
       notifyListeners();
       loading = false;
-    } catch (e) {}
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 }

@@ -23,7 +23,7 @@ class TvProvider extends ChangeNotifier {
       groupTitle: '🌏 ប៉ុស្ដិ៍ទាំងអស់',
       logo: '');
 
-  void init() async {
+  Future<bool> init() async {
     try {
       _download = 0.1;
       notifyListeners();
@@ -38,7 +38,9 @@ class TvProvider extends ChangeNotifier {
           playlist.where((e) => e.groupTitle == _gt[0].groupTitle).toList();
       _download = 100.0;
       notifyListeners();
-      // ignore: empty_catches
-    } catch (e) {}
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 }
