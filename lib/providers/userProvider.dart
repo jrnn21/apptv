@@ -12,6 +12,7 @@ class UserProvider extends ChangeNotifier {
   GraphQLClient client = cli();
   DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
   bool _loading = false;
+  String _deviceID = '';
   User _user = User(
     id: '',
     username: '',
@@ -23,6 +24,7 @@ class UserProvider extends ChangeNotifier {
   );
   User get user => _user;
   bool get loading => _loading;
+  String get deviceID => _deviceID;
 
   Future<String> initPlatformState() async {
     try {
@@ -47,6 +49,7 @@ class UserProvider extends ChangeNotifier {
     _loading = true;
     String tel = await UserPreferences().getUsername();
     String deviceId = await initPlatformState();
+    _deviceID = deviceId;
     notifyListeners();
     client.resetStore();
     try {

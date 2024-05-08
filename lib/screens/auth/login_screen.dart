@@ -166,113 +166,155 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      resizeToAvoidBottomInset: false,
-      backgroundColor: Colors.black,
-      body: Container(
-        decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('images/preview_main_ui_background_image.png'),
-            fit: BoxFit.fill,
+    String deviceId = context.watch<UserProvider>().deviceID;
+    return WillPopScope(
+      onWillPop: () async {
+        if (selected) {
+          setState(() {
+            selected = false;
+            selected1 = false;
+          });
+          return false;
+        }
+        return true;
+      },
+      child: Scaffold(
+        resizeToAvoidBottomInset: false,
+        backgroundColor: Colors.black,
+        body: Container(
+          decoration: const BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage('images/preview_main_ui_background_image.png'),
+              fit: BoxFit.fill,
+            ),
           ),
-        ),
-        width: double.infinity,
-        height: double.infinity,
-        child: Column(
-          // mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            const SizedBox(height: 120),
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              padding: EdgeInsets.only(top: selected ? 0 : 50),
-              child: Column(
-                children: [
-                  SizedBox(
-                    height: 20,
-                    child: error.isNotEmpty
-                        ? Text(
-                            error,
-                            style: styleGT(Colors.red),
-                          )
-                        : success.isNotEmpty
-                            ? Text(success, style: styleGT(Colors.green))
-                            : const SizedBox(),
-                  ),
-                  Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      autofocus: true,
-                      focusColor: Colors.white,
-                      borderRadius: BorderRadius.circular(8),
-                      onTap: () {
-                        setState(() {
-                          selected = !selected;
-                        });
-                        Future.delayed(const Duration(milliseconds: 10), () {
-                          setState(() {
-                            selected1 = !selected1;
-                          });
-                        });
-                      },
-                      child: Container(
-                        width: 250,
-                        padding: const EdgeInsets.symmetric(vertical: 6),
-                        margin: const EdgeInsets.all(3),
-                        decoration: BoxDecoration(
-                            color: const Color.fromARGB(197, 56, 48, 48),
-                            borderRadius: BorderRadius.circular(8),
-                            border:
-                                Border.all(color: Colors.blueAccent, width: 3)),
-                        child: Row(
-                          children: [
-                            const SizedBox(width: 5),
-                            const Icon(
-                              Icons.phone_android,
-                              color: Colors.blueAccent,
+          width: double.infinity,
+          height: double.infinity,
+          child: Stack(
+            children: [
+              SizedBox(
+                width: MediaQuery.of(context).size.width,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const SizedBox(height: 120),
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: EdgeInsets.only(top: selected ? 0 : 50),
+                      child: Column(
+                        children: [
+                          SizedBox(
+                            height: 20,
+                            child: error.isNotEmpty
+                                ? Text(
+                                    error,
+                                    style: styleGT(Colors.red),
+                                  )
+                                : success.isNotEmpty
+                                    ? Text(success,
+                                        style: styleGT(Colors.green))
+                                    : const SizedBox(),
+                          ),
+                          Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              autofocus: true,
+                              focusColor: Colors.white,
+                              borderRadius: BorderRadius.circular(8),
+                              onTap: () {
+                                setState(() {
+                                  selected = !selected;
+                                });
+                                Future.delayed(const Duration(milliseconds: 10),
+                                    () {
+                                  setState(() {
+                                    selected1 = !selected1;
+                                  });
+                                });
+                              },
+                              child: Container(
+                                width: 250,
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 6),
+                                margin: const EdgeInsets.all(3),
+                                decoration: BoxDecoration(
+                                    color:
+                                        const Color.fromARGB(197, 56, 48, 48),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                        color: Colors.blueAccent, width: 3)),
+                                child: Row(
+                                  children: [
+                                    const SizedBox(width: 5),
+                                    const Icon(
+                                      Icons.phone_android,
+                                      color: Colors.blueAccent,
+                                    ),
+                                    const SizedBox(width: 5),
+                                    Expanded(
+                                        child: Text(
+                                      _password,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                          color: Colors.blueAccent,
+                                          fontWeight: FontWeight.w900),
+                                    )),
+                                  ],
+                                ),
+                              ),
                             ),
-                            const SizedBox(width: 5),
-                            Expanded(
-                                child: Text(
-                              _password,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                  color: Colors.blueAccent,
-                                  fontWeight: FontWeight.w900),
-                            )),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
+                    const SizedBox(height: 10),
+                    Visibility(
+                      visible: selected,
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        transform: Matrix4.translationValues(
+                            0, selected1 ? 0 : 100, 0),
+                        width: 250,
+                        child: CustomKeyboard(onKeyPressed: (String key) {
+                          // Handle key presses
+                          if (key == 'backspace') {
+                            if (_password.isEmpty) return;
+                            _password =
+                                _password.substring(0, _password.length - 1);
+                            setState(() {});
+                            return;
+                          }
+                          if (key == 'login') {
+                            _fetch();
+                            return;
+                          }
+                          _password = _password + key;
+                          setState(() {});
+                        }),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Positioned(
+                bottom: 5,
+                right: 10,
+                child: Text(
+                  'Device ID: $deviceId',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    shadows: [
+                      Shadow(offset: Offset(-1, -1), color: Colors.black),
+                      Shadow(offset: Offset(1, -1), color: Colors.black),
+                      Shadow(offset: Offset(1, 1), color: Colors.black),
+                      Shadow(offset: Offset(-1, 1), color: Colors.black),
+                    ],
                   ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 10),
-            Visibility(
-              visible: selected,
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                transform: Matrix4.translationValues(0, selected1 ? 0 : 100, 0),
-                width: 250,
-                child: CustomKeyboard(onKeyPressed: (String key) {
-                  // Handle key presses
-                  if (key == 'backspace') {
-                    if (_password.isEmpty) return;
-                    _password = _password.substring(0, _password.length - 1);
-                    setState(() {});
-                    return;
-                  }
-                  if (key == 'login') {
-                    _fetch();
-                    return;
-                  }
-                  _password = _password + key;
-                  setState(() {});
-                }),
-              ),
-            ),
-          ],
+                ),
+              )
+            ],
+          ),
         ),
       ),
     );

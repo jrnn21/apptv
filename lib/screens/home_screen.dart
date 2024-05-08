@@ -20,9 +20,12 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
+  int? focusItem;
   TextStyle style = const TextStyle(
     color: Colors.white,
     fontWeight: FontWeight.bold,
+    fontSize: 20,
+    fontFamilyFallback: ['koulen'],
     shadows: <Shadow>[
       Shadow(
         offset: Offset(1.0, 1.0),
@@ -77,22 +80,32 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         backgroundColor: Colors.black,
         body: Container(
           decoration: const BoxDecoration(
-              image: DecorationImage(
-                  image: AssetImage('images/BackgroundScreen.jpg'))),
+              image:
+                  DecorationImage(image: AssetImage('images/Background.jpg'))),
           width: double.infinity,
           height: double.infinity,
           child: Stack(
             children: [
-              Center(
+              Positioned(
+                top: 130,
+                width: MediaQuery.of(context).size.width,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     Material(
                       color: Colors.transparent,
                       child: InkWell(
-                        focusColor: Colors.white,
                         autofocus: true,
-                        borderRadius: BorderRadius.circular(20),
+                        focusColor: const Color.fromARGB(90, 255, 0, 0),
+                        highlightColor: const Color.fromARGB(90, 255, 0, 0),
+                        onFocusChange: (value) {
+                          if (value) {
+                            setState(() {
+                              focusItem = 1;
+                            });
+                          }
+                        },
+                        borderRadius: BorderRadius.circular(10),
                         onTap: () {
                           if (tvDownloadProgress == 100.0) {
                             Navigator.of(context).push(MaterialPageRoute(
@@ -104,46 +117,42 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                         child: Container(
                           margin: const EdgeInsets.all(3),
                           width: 200,
-                          height: 250,
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [
-                                Color.fromARGB(255, 42, 230, 220),
-                                Color.fromARGB(255, 8, 49, 230),
-                              ],
-                            ),
-                            borderRadius:
-                                const BorderRadius.all(Radius.circular(20)),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color.fromARGB(255, 69, 70, 70)
-                                    .withOpacity(0.5),
-                                spreadRadius: 2,
-                                blurRadius: 2,
-                                offset: const Offset(1, 1),
-                              ),
-                            ],
+                          // height: 250,
+                          decoration: const BoxDecoration(
+                            borderRadius: BorderRadius.all(Radius.circular(10)),
                           ),
                           child: tvDownloadProgress == 100.0 ||
                                   tvDownloadProgress == 0.0
-                              ? const Column(
+                              ? Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Icon(
-                                      Icons.live_tv_rounded,
-                                      size: 100,
-                                      color: Colors.white,
-                                    ),
-                                    Text(
-                                      'ផ្សាយផ្ទាល់',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
+                                    AnimatedContainer(
+                                      height: 200,
+                                      duration:
+                                          const Duration(milliseconds: 200),
+                                      transform: Matrix4.diagonal3Values(
+                                          focusItem == 1 ? 1.2 : 1,
+                                          focusItem == 1 ? 1.2 : 1,
+                                          1),
+                                      transformAlignment: Alignment.center,
+                                      child: Column(
+                                        children: [
+                                          const SizedBox(height: 22),
+                                          Image.asset(
+                                            'images/TVicon2.png',
+                                            width: 110,
+                                          ),
+                                        ],
                                       ),
+                                    ),
+                                    Image.asset(
+                                      'images/Group4.png',
+                                      width: 100,
                                     )
+                                    // Text(
+                                    //   'ផ្សាយផ្ទាល់',
+                                    //   style: style,
+                                    // )
                                   ],
                                 )
                               : Column(
@@ -163,7 +172,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                     const SizedBox(height: 10),
                                     AnimatedFlipCounter(
                                       value: tvDownloadProgress,
-                                      fractionDigits: 1, // decimal precision
+                                      fractionDigits: 1,
                                       suffix: "%",
                                       duration: const Duration(seconds: 1),
                                       textStyle: const TextStyle(
@@ -179,8 +188,16 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     Material(
                       color: Colors.transparent,
                       child: InkWell(
-                        focusColor: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
+                        focusColor: const Color.fromARGB(90, 255, 0, 0),
+                        highlightColor: const Color.fromARGB(90, 255, 0, 0),
+                        onFocusChange: (value) {
+                          if (value) {
+                            setState(() {
+                              focusItem = 2;
+                            });
+                          }
+                        },
+                        borderRadius: BorderRadius.circular(10),
                         onTap: () {
                           if (moviesDownloadProgress == 100.0) {
                             Navigator.of(context).push(MaterialPageRoute(
@@ -192,48 +209,36 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                         child: Container(
                           margin: const EdgeInsets.all(3),
                           width: 200,
-                          height: 250,
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              // stops: [0.1, 0.5, 0.7, 0.9],
-                              colors: [
-                                Color.fromARGB(255, 243, 164, 250),
-                                Color.fromARGB(255, 173, 7, 165),
-                              ],
-                            ),
-                            borderRadius:
-                                const BorderRadius.all(Radius.circular(20)),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color.fromARGB(255, 69, 70, 70)
-                                    .withOpacity(0.5),
-                                spreadRadius: 2,
-                                blurRadius: 2,
-                                offset: const Offset(
-                                    1, 1), // changes position of shadow
-                              ),
-                            ],
+                          // height: 250,
+                          decoration: const BoxDecoration(
+                            borderRadius: BorderRadius.all(Radius.circular(20)),
                           ),
                           child: moviesDownloadProgress == 100.0 ||
                                   moviesDownloadProgress == 0.0
-                              ? const Column(
+                              ? Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Icon(
-                                      Icons.movie,
-                                      size: 100,
-                                      color: Colors.white,
-                                    ),
-                                    Text(
-                                      'រឿងហូលីវូត',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
+                                    AnimatedContainer(
+                                      height: 200,
+                                      duration:
+                                          const Duration(milliseconds: 200),
+                                      transform: Matrix4.diagonal3Values(
+                                          focusItem == 2 ? 1.2 : 1,
+                                          focusItem == 2 ? 1.2 : 1,
+                                          1),
+                                      transformAlignment: Alignment.center,
+                                      child: Center(
+                                        child: Image.asset(
+                                          'images/Movieicon2.png',
+                                          width: 110,
+                                        ),
                                       ),
+                                    ),
+                                    Image.asset(
+                                      'images/Group5.png',
+                                      width: 100,
                                     )
+                                    // Text('រឿងហូលីវូត', style: style)
                                   ],
                                 )
                               : Column(
@@ -253,7 +258,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                     const SizedBox(height: 10),
                                     AnimatedFlipCounter(
                                       value: moviesDownloadProgress,
-                                      fractionDigits: 1, // decimal precision
+                                      fractionDigits: 1,
                                       suffix: "%",
                                       textStyle: const TextStyle(
                                         color: Colors.white,
@@ -268,7 +273,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     Material(
                       color: Colors.transparent,
                       child: InkWell(
-                        focusColor: Colors.white,
+                        focusColor: const Color.fromARGB(90, 255, 0, 0),
+                        highlightColor: const Color.fromARGB(90, 255, 0, 0),
+                        onFocusChange: (value) {
+                          if (value) {
+                            setState(() {
+                              focusItem = 3;
+                            });
+                          }
+                        },
                         borderRadius: BorderRadius.circular(20),
                         onTap: () {
                           if (seriesDownloadProgress == 100.0) {
@@ -281,47 +294,41 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                         child: Container(
                           margin: const EdgeInsets.all(3),
                           width: 200,
-                          height: 250,
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              // stops: [0.1, 0.5, 0.7, 0.9],
-                              colors: [
-                                Color.fromARGB(255, 163, 234, 247),
-                                Color.fromARGB(255, 19, 49, 180),
-                              ],
-                            ),
-                            borderRadius:
-                                const BorderRadius.all(Radius.circular(20)),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color.fromARGB(255, 69, 70, 70)
-                                    .withOpacity(0.5),
-                                spreadRadius: 2,
-                                blurRadius: 2,
-                                offset: const Offset(
-                                    1, 1), // changes position of shadow
-                              ),
-                            ],
+                          // height: 250,
+                          decoration: const BoxDecoration(
+                            borderRadius: BorderRadius.all(Radius.circular(20)),
                           ),
                           child: seriesDownloadProgress == 100.0 ||
                                   seriesDownloadProgress == 0.0
-                              ? const Column(
+                              ? Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Icon(
-                                      Icons.local_movies,
-                                      size: 100,
-                                      color: Colors.white,
-                                    ),
-                                    Text(
-                                      'រឿងភាគ',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
+                                    AnimatedContainer(
+                                      height: 200,
+                                      duration:
+                                          const Duration(milliseconds: 200),
+                                      transform: Matrix4.diagonal3Values(
+                                          focusItem == 3 ? 1.2 : 1,
+                                          focusItem == 3 ? 1.2 : 1,
+                                          1),
+                                      transformAlignment: Alignment.center,
+                                      child: Column(
+                                        children: [
+                                          const SizedBox(height: 47),
+                                          Image.asset(
+                                            'images/seriesicon3.png',
+                                            width: 165,
+                                          ),
+                                        ],
                                       ),
+                                    ),
+                                    // Text(
+                                    //   'រឿងភាគ',
+                                    //   style: style,
+                                    // )
+                                    Image.asset(
+                                      'images/Group6.png',
+                                      width: 80,
                                     )
                                   ],
                                 )
@@ -378,7 +385,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               //   ),
               // ),
               Positioned(
-                  bottom: 5,
+                  top: 5,
                   left: 10,
                   child: FlipClockPlus.reverseCountdown(
                     duration: durationExpire,

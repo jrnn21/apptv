@@ -1,7 +1,5 @@
 // ignore_for_file: file_names
-
 import 'dart:convert';
-
 import 'package:apptv02/utility/class.dart';
 import 'package:http/http.dart' as http;
 

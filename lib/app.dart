@@ -1,7 +1,10 @@
+import 'package:apptv02/models/app_version.dart';
+import 'package:apptv02/providers/app_provider.dart';
 import 'package:apptv02/providers/expire_provider.dart';
 import 'package:apptv02/screens/auth/login_screen.dart';
 import 'package:apptv02/models/user.dart';
 import 'package:apptv02/providers/userProvider.dart';
+import 'package:apptv02/screens/download_screen.dart';
 import 'package:apptv02/screens/expire_screen.dart';
 import 'package:apptv02/screens/home_screen.dart';
 import 'package:flutter/material.dart';
@@ -34,13 +37,16 @@ class _AppState extends State<App> {
   }
 
   _fetch() async {
-    context.read<UserProvider>().fetchLogin().then((value) {});
+    context.read<AppProvider>().init();
+    context.read<UserProvider>().fetchLogin();
   }
 
   @override
   Widget build(BuildContext context) {
     user = context.watch<UserProvider>().user;
     TimeExpire timeExpire = context.watch<ExpireProvider>().timer;
+    AppVersion? app = context.watch<AppProvider>().app;
+    String? appCurrentVersion = context.watch<AppProvider>().appCurrentVersion;
     if (user.id.isNotEmpty && !inInitTime) {
       context
           .read<ExpireProvider>()
@@ -56,15 +62,17 @@ class _AppState extends State<App> {
       theme: ThemeData(useMaterial3: false),
       home: loading
           ? const LoadingPage()
-          : user.id == ''
-              ? const LoginScreen()
-              : timeExpire.expireTime == timeExpire.correntTime
-                  ? const LoadingPage()
-                  : timeExpire.expireTime < timeExpire.correntTime
-                      ? const ExpireScreen()
-                      : const HomeScreen(),
-      // home: const ExpireScreen(),
-      // home: const LoadingPage(),
+          : app != null &&
+                  appCurrentVersion != null &&
+                  appCurrentVersion != app.version
+              ? const DownloadScreen()
+              : user.id == ''
+                  ? const LoginScreen()
+                  : timeExpire.expireTime == timeExpire.correntTime
+                      ? const LoadingPage()
+                      : timeExpire.expireTime < timeExpire.correntTime
+                          ? const ExpireScreen()
+                          : const HomeScreen(),
     );
   }
 }
@@ -82,8 +90,6 @@ class LoadingPage extends StatelessWidget {
           trackColor: Colors.blueAccent,
           waveColor: Colors.blueAccent,
           size: 80.0,
-          // duration: Duration(milliseconds: 500),
-          // strokeWidth: 2,
         ),
       ),
     );

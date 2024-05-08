@@ -1,4 +1,5 @@
 import 'package:apptv02/app.dart';
+import 'package:apptv02/providers/app_provider.dart';
 import 'package:apptv02/providers/expire_provider.dart';
 import 'package:apptv02/providers/movies_provider.dart';
 import 'package:apptv02/providers/series_provider.dart';
@@ -40,6 +41,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (_) => AppProvider()),
         ChangeNotifierProvider(create: (_) => UserProvider()),
         ChangeNotifierProvider(create: (_) => SeriesProvider()),
         ChangeNotifierProvider(create: (_) => MoviesProvider()),
