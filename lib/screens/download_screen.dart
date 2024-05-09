@@ -39,7 +39,8 @@ class _DownloadScreenState extends State<DownloadScreen> {
         width: MediaQuery.of(context).size.width,
         height: MediaQuery.of(context).size.height,
         decoration: const BoxDecoration(
-            image: DecorationImage(image: AssetImage('images/Background.jpg'))),
+            image: DecorationImage(
+                image: AssetImage('images/BackgroundScreen.jpg'))),
         child: Stack(
           children: [
             SizedBox(
@@ -63,8 +64,8 @@ class _DownloadScreenState extends State<DownloadScreen> {
                     elevation: 2,
                     borderRadius: BorderRadius.circular(5),
                     child: InkWell(
-                      focusColor: Colors.white,
-                      highlightColor: Colors.white,
+                      focusColor: Colors.blueAccent,
+                      highlightColor: Colors.blueAccent,
                       borderRadius: BorderRadius.circular(5),
                       onTap: () {
                         context

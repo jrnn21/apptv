@@ -18,6 +18,7 @@ class MoviesScreen extends StatefulWidget {
 }
 
 class _MoviesScreenState extends State<MoviesScreen> {
+  late double h;
   int itemsPerPage = 18;
   int currentPage = 0;
   var seen = <String>{};
@@ -47,8 +48,15 @@ class _MoviesScreenState extends State<MoviesScreen> {
   @override
   void initState() {
     super.initState();
+
     playlistScrollController.addListener(_onScroll);
     init();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    h = MediaQuery.of(context).size.height;
   }
 
   @override
@@ -129,13 +137,14 @@ class _MoviesScreenState extends State<MoviesScreen> {
       case LogicalKeyboardKey.arrowRight:
         i = (selectMovie + 1).clamp(0, playlistPages.length - 1);
         int indexFloor = (i / 6).floor();
-        double itemHeight = 225.3533333333;
+        double itemHeight = h * 0.4173209876542593;
+
         await playlistScrollController.animateTo(
             indexFloor < 1
                 ? 0
                 : indexFloor == 1
-                    ? 85
-                    : (indexFloor * itemHeight) - 140,
+                    ? h * 0.1574074074074074
+                    : (indexFloor * itemHeight) - h * 0.2592592592592593,
             duration: const Duration(milliseconds: 200),
             curve: Curves.linear);
 
@@ -159,33 +168,32 @@ class _MoviesScreenState extends State<MoviesScreen> {
         if (selectMovie - 5 > 0) {
           i = (selectMovie - 6).clamp(0, playlistPages.length - 1);
           int indexFloor = (i / 6).floor();
-          double itemHeight = 225.3533333333;
+          double itemHeight = h * 0.4173209876542593;
 
           await playlistScrollController.animateTo(
               indexFloor < 1
                   ? 0
                   : indexFloor == 1
-                      ? 85
-                      : (indexFloor * itemHeight) - 140,
+                      ? h * 0.1574074074074074
+                      : (indexFloor * itemHeight) - h * 0.2592592592592593,
               duration: const Duration(milliseconds: 200),
               curve: Curves.linear);
           setState(() {
             selectMovie = i;
           });
         }
-
         break;
       case LogicalKeyboardKey.arrowDown:
         i = (selectMovie + 6).clamp(0, playlistPages.length - 1);
         int indexFloor = (i / 6).floor();
-        double itemHeight = 225.3533333333;
+        double itemHeight = h * 0.4173209876542593;
 
         await playlistScrollController.animateTo(
             indexFloor < 1
                 ? 0
                 : indexFloor == 1
-                    ? 85
-                    : (indexFloor * itemHeight) - 140,
+                    ? h * 0.1574074074074074
+                    : (indexFloor * itemHeight) - h * 0.2592592592592593,
             duration: const Duration(milliseconds: 200),
             curve: Curves.linear);
         setState(() {
@@ -275,14 +283,17 @@ class _MoviesScreenState extends State<MoviesScreen> {
                   ),
                 ),
                 child: GridView.builder(
-                  padding: const EdgeInsets.only(
-                      top: 17, right: 15, left: 15, bottom: 17),
+                  padding: EdgeInsets.only(
+                      top: h * .035,
+                      left: h * .035,
+                      right: h * .035,
+                      bottom: h * .035),
                   shrinkWrap: true,
                   controller: playlistScrollController,
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 6,
-                    crossAxisSpacing: 15.0,
-                    mainAxisSpacing: 15.0,
+                    crossAxisSpacing: h * .03,
+                    mainAxisSpacing: h * .03,
                     childAspectRatio: 500 / 738,
                   ),
                   itemCount: playlistPages.length,

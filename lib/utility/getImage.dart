@@ -11,10 +11,8 @@ Future<File> getImage(imageUrl) async {
 
   File imageFile = File(imagePath);
   if (await imageFile.exists()) {
-    // Image is already cached, return it
     return imageFile;
   } else {
-    // Image is not cached, download and cache it
     await _downloadAndSaveImage(imageUrl, imagePath);
     return imageFile;
   }

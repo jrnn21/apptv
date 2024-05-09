@@ -42,7 +42,7 @@ class AppProvider extends ChangeNotifier {
       print("Wait a moment, downloading");
       return;
     }
-    var status = await Permission.storage.request();
+    var status = await Permission.requestInstallPackages.request();
     if (status.isGranted) {
       _progressValue = 0.0;
       var appDocDir = await getTemporaryDirectory();

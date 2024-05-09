@@ -1,6 +1,7 @@
 // ignore_for_file: deprecated_member_use, camel_case_types, unrelated_type_equality_checks
 
 import 'dart:ui';
+import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
 import 'package:apptv02/providers/expire_provider.dart';
 import 'package:apptv02/utility/class.dart';
@@ -52,9 +53,11 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
 
     image = CachedNetworkImage(
       filterQuality: FilterQuality.low,
-      memCacheWidth: 30,
       imageUrl: widget.playlists[0].logo.trim(),
       width: 30,
+      placeholder: (context, url) => const SizedBox(height: 30, width: 30),
+      errorWidget: (context, url, error) =>
+          const SizedBox(height: 30, width: 30),
     );
 
     super.initState();
@@ -621,6 +624,8 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
                                             showPlaylist = true;
                                             bottomBTNselected = 3;
                                           });
+                                          await Future.delayed(const Duration(
+                                              milliseconds: 200));
                                           await autoScrollController
                                               .scrollToIndex(selectIndex,
                                                   preferPosition:
@@ -845,102 +850,90 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
                   ),
                 ),
               ),
-              Visibility(
-                visible: showPlaylist,
-                child: Row(
-                  children: [
-                    ClipRect(
-                      child: BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 4.0, sigmaY: 4.0),
-                        child: Container(
-                          clipBehavior: Clip.hardEdge,
-                          margin: const EdgeInsets.all(8),
-                          width: 300,
-                          decoration: BoxDecoration(
-                              color: const Color.fromARGB(255, 87, 87, 87)
-                                  .withOpacity(0.8),
-                              borderRadius: BorderRadius.circular(10)),
-                          child: SingleChildScrollView(
-                            controller: autoScrollController,
-                            child: Column(
-                              children: [
-                                ...widget.playlists.asMap().map((i, e) {
-                                  return MapEntry(
-                                    i,
-                                    ClipRect(
-                                      child: Material(
-                                        color: Colors.transparent,
-                                        child: GestureDetector(
-                                          onTap: () {
-                                            setState(() {
-                                              selectIndex = i;
-                                            });
-                                            controller.videoPlayerController
-                                                ?.setNetworkDataSource(e.link);
-                                            controller.play();
-                                          },
-                                          child: AutoScrollTag(
-                                            key: ValueKey(i),
-                                            controller: autoScrollController,
-                                            index: i,
-                                            child: Container(
-                                              color: selectIndex == i
-                                                  ? Colors.blueAccent
-                                                  : Colors.transparent,
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                      horizontal: 10,
-                                                      vertical: 5),
-                                              child: Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.start,
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  image,
-                                                  const SizedBox(width: 10),
-                                                  Expanded(
-                                                    child: FittedBox(
-                                                      alignment:
-                                                          Alignment.centerLeft,
-                                                      fit: BoxFit.scaleDown,
-                                                      child: Text(
-                                                        '${e.title} ${e.ep}',
-                                                        style: const TextStyle(
-                                                          color: Colors.white,
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  )
-                                                ],
-                                              ),
+              Row(
+                children: [
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    clipBehavior: Clip.hardEdge,
+                    margin: const EdgeInsets.all(8),
+                    transform: Matrix4.translationValues(
+                        showPlaylist ? 0 : -320, 0.0, 0.0),
+                    width: 300,
+                    decoration: BoxDecoration(
+                        color:
+                            const Color.fromARGB(195, 0, 0, 0).withOpacity(0.8),
+                        borderRadius: BorderRadius.circular(10)),
+                    child: SingleChildScrollView(
+                      controller: autoScrollController,
+                      child: Column(
+                        children: [
+                          ...widget.playlists.asMap().map((i, e) {
+                            return MapEntry(
+                              i,
+                              ClipRect(
+                                child: Material(
+                                  color: Colors.transparent,
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      setState(() {
+                                        selectIndex = i;
+                                      });
+                                      controller.videoPlayerController
+                                          ?.setNetworkDataSource(e.link);
+                                      controller.play();
+                                    },
+                                    child: AutoScrollTag(
+                                      key: ValueKey(i),
+                                      controller: autoScrollController,
+                                      index: i,
+                                      child: Container(
+                                        color: selectIndex == i
+                                            ? Colors.blueAccent
+                                            : Colors.transparent,
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 10, vertical: 5),
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.start,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.center,
+                                          children: [
+                                            // image,
+                                            const SizedBox(
+                                                width: 10, height: 30),
+                                            Text(
+                                              '${i + 1}',
+                                              style: const TextStyle(
+                                                  color: Colors.white),
                                             ),
-                                          ),
+                                            const SizedBox(width: 10),
+                                            Expanded(
+                                              child: FittedBox(
+                                                alignment: Alignment.centerLeft,
+                                                fit: BoxFit.scaleDown,
+                                                child: Text(
+                                                  '${e.title} ${e.ep}',
+                                                  style: const TextStyle(
+                                                    color: Colors.white,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                              ),
+                                            )
+                                          ],
                                         ),
                                       ),
                                     ),
-                                  );
-                                }).values
-                              ],
-                            ),
-                          ),
-                        ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          }).values
+                        ],
                       ),
                     ),
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () => setState(() {
-                          showPlaylist = !showPlaylist;
-                        }),
-                        child: Container(
-                          color: Colors.transparent,
-                        ),
-                      ),
-                    )
-                  ],
-                ),
+                  ),
+                ],
               )
             ],
           ),

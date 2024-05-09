@@ -4,6 +4,7 @@ import 'package:apptv02/utility/class.dart';
 import 'package:apptv02/utility/counter.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 
 class MoviesCom extends StatefulWidget {
@@ -43,6 +44,7 @@ class _MoviesComState extends State<MoviesCom> {
   @override
   Widget build(BuildContext context) {
     bool se = widget.i == widget.selectMovie;
+    double h = MediaQuery.of(context).size.height;
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       transform: Matrix4.diagonal3Values(se ? 1.15 : 1.0, se ? 1.15 : 1.0, 1.0),
@@ -54,7 +56,7 @@ class _MoviesComState extends State<MoviesCom> {
         child: GestureDetector(
           onTap: widget.ontap,
           child: Container(
-            padding: const EdgeInsets.all(3),
+            padding: EdgeInsets.all(h * .005),
             decoration: BoxDecoration(
                 color: Colors.white12, borderRadius: BorderRadius.circular(8)),
             child: Stack(
@@ -70,6 +72,9 @@ class _MoviesComState extends State<MoviesCom> {
                     fit: BoxFit.cover,
                     width: double.infinity,
                     height: double.infinity,
+                    placeholder: (context, url) => const SizedBox(height: 30),
+                    errorWidget: (context, url, error) =>
+                        const SizedBox(height: 30),
                   ),
                 ),
                 Positioned(
@@ -77,7 +82,7 @@ class _MoviesComState extends State<MoviesCom> {
                   left: 5,
                   child: Container(
                     padding:
-                        const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                        const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                     decoration: BoxDecoration(
                       color: Colors.pink,
                       borderRadius: const BorderRadius.all(Radius.circular(5)),
@@ -95,7 +100,7 @@ class _MoviesComState extends State<MoviesCom> {
                     child: Text(
                       widget.e.year.toString(),
                       style: const TextStyle(
-                        fontSize: 10,
+                        fontSize: 13,
                         color: Color.fromARGB(255, 255, 255, 255),
                         fontWeight: FontWeight.bold,
                       ),
@@ -125,7 +130,7 @@ class _MoviesComState extends State<MoviesCom> {
                             ],
                           ),
                           child: SizedBox(
-                            height: 14,
+                            height: 20,
                             child: Center(
                               child: Text(
                                 counterSeriesByEp(
@@ -133,7 +138,7 @@ class _MoviesComState extends State<MoviesCom> {
                                         value: widget.e.title)
                                     .trim(),
                                 style: const TextStyle(
-                                  fontSize: 10,
+                                  fontSize: 13,
                                   color: Color.fromARGB(255, 255, 255, 255),
                                   fontWeight: FontWeight.bold,
                                 ),

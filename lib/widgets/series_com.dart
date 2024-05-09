@@ -43,6 +43,7 @@ class _SeriesComState extends State<SeriesCom> {
   @override
   Widget build(BuildContext context) {
     bool se = widget.i == widget.selectMovie;
+    double h = MediaQuery.of(context).size.height;
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       transform: Matrix4.diagonal3Values(se ? 1.15 : 1.0, se ? 1.15 : 1.0, 1.0),
@@ -54,7 +55,7 @@ class _SeriesComState extends State<SeriesCom> {
         child: GestureDetector(
           onTap: widget.ontap,
           child: Container(
-            padding: const EdgeInsets.all(3),
+            padding: EdgeInsets.all(h * .005),
             decoration: BoxDecoration(
                 color: Colors.white12, borderRadius: BorderRadius.circular(8)),
             child: Stack(
@@ -95,7 +96,7 @@ class _SeriesComState extends State<SeriesCom> {
                             ],
                           ),
                           child: SizedBox(
-                            height: 14,
+                            height: 20,
                             child: Center(
                               child: Text(
                                 counterSeriesByEp(
@@ -103,7 +104,7 @@ class _SeriesComState extends State<SeriesCom> {
                                         value: widget.e.title)
                                     .trim(),
                                 style: const TextStyle(
-                                  fontSize: 10,
+                                  fontSize: 13,
                                   color: Color.fromARGB(255, 255, 255, 255),
                                   fontWeight: FontWeight.bold,
                                 ),
