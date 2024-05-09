@@ -10,7 +10,6 @@ import 'package:apptv02/screens/series_screen.dart';
 import 'package:flip_panel_plus/flip_panel_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:provider/provider.dart';
 import 'package:animated_flip_counter/animated_flip_counter.dart';
