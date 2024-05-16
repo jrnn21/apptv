@@ -22,7 +22,7 @@ class SeriesProvider extends ChangeNotifier {
   List<M3USeriesItem> get playlistFilter => _playlistFilter;
   double get download => _download;
 
-  Future<bool> init() async {
+  Future<bool> init(String link) async {
     try {
       List<Cate> cates = [];
       List<M3USeriesItem> series = [];
@@ -30,8 +30,9 @@ class SeriesProvider extends ChangeNotifier {
       List<M3USeriesItem> movies = [];
       _download = 1.0;
       notifyListeners();
-      final m3uContent = (await http.get(Uri.parse(
-          'https://onedrive.live.com/download?resid=EA093E3A43CE7C5C%21920&authkey=!AKJovZ9R4Awr6TM')));
+      final m3uContent = (await http.get(
+        Uri.parse(link),
+      ));
       List<String> cates0 =
           utf8.decode(m3uContent.bodyBytes).toString().split('\n');
       int i = 1;
@@ -57,10 +58,11 @@ class SeriesProvider extends ChangeNotifier {
             groupTitle: groupTitle,
             link: link,
           ));
-          _download = i * 100 / cates0.length;
-          i++;
+
           notifyListeners();
         }
+        _download = i * 100 / cates0.length;
+        i++;
       }
 
       movies.sort((a, b) => b.date.compareTo(a.date));

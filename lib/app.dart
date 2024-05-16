@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:apptv02/models/app_version.dart';
 import 'package:apptv02/providers/app_provider.dart';
 import 'package:apptv02/providers/expire_provider.dart';
@@ -38,6 +40,7 @@ class _AppState extends State<App> {
 
   _fetch() async {
     context.read<AppProvider>().init();
+    context.read<AppProvider>().getLinkApp();
     context.read<UserProvider>().fetchLogin();
   }
 

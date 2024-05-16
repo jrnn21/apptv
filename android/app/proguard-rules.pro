@@ -1,1 +1,2 @@
 -keep class org.videolan.libvlc.** { *; }
+-keep class com.google.android.exoplayer2.** { *; }

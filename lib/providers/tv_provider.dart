@@ -23,15 +23,11 @@ class TvProvider extends ChangeNotifier {
       groupTitle: '🌏 ប៉ុស្ដិ៍ទាំងអស់',
       logo: '');
 
-  Future<bool> init() async {
+  Future<bool> init(String link) async {
     try {
       _download = 0.1;
       notifyListeners();
-      List<M3UItem> playlist = await parseM3uFromUrl(
-          url:
-              'https://onedrive.live.com/download?resid=EA093E3A43CE7C5C%21952&authkey=!ANGeoUWOkFJvkZ8'
-          // 'https://onedrive.live.com/download?resid=EA093E3A43CE7C5C%21382&authkey=!ADCtDvdxtFOhjzY'
-          );
+      List<M3UItem> playlist = await parseM3uFromUrl(url: link);
       List<M3UItem> groupTitles =
           playlist.where((obj) => seen.add(obj.groupTitle)).toList();
       _gt = groupTitles;

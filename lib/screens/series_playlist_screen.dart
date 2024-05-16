@@ -38,6 +38,7 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
   bool play = true;
   BoxFit currentBoxFit = BoxFit.fill;
   bool loadPlayer = false;
+  String error = '';
 
   @override
   void initState() {
@@ -78,36 +79,14 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
         fit: currentBoxFit,
         allowedScreenSleep: false,
         controlsConfiguration: const BetterPlayerControlsConfiguration(
-          enableAudioTracks: false,
-          enableMute: false,
-          enableFullscreen: true,
-          enablePlayPause: true,
-          enablePlaybackSpeed: false,
-          // enableProgressBarDrag: false,
-          enableQualities: false,
-          enableOverflowMenu: false,
-          enableSkips: false,
-          enableSubtitles: false,
-          playIcon: Icons.play_arrow,
-          controlBarColor: Colors.transparent,
-          progressBarPlayedColor: Colors.red,
-          progressBarBackgroundColor: Colors.white38,
-          progressBarHandleColor: Colors.transparent,
           // showControlsOnInitialize: true,
           showControls: false,
         ),
       ),
-      betterPlayerDataSource: BetterPlayerDataSource(
-        BetterPlayerDataSourceType.network,
-        widget.playlists[0].link.trim(),
-        bufferingConfiguration: const BetterPlayerBufferingConfiguration(
-          minBufferMs: 12000,
-          maxBufferMs: 60000,
-          // bufferForPlaybackMs: 1000,
-          // bufferForPlaybackAfterRebufferMs: 1000,
-        ),
-      ),
     );
+
+    _play(widget.playlists[0].link.trim());
+
     await autoScrollController.scrollToIndex(selectIndex,
         // preferPosition: AutoScrollPosition.end,
         duration: const Duration(milliseconds: 300));
@@ -142,13 +121,39 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
       if (event.betterPlayerEventType == BetterPlayerEventType.play) {
         setState(() {
           play = true;
+          error = '';
         });
       } else if (event.betterPlayerEventType == BetterPlayerEventType.pause) {
         setState(() {
           play = false;
         });
       }
+      if (event.betterPlayerEventType == BetterPlayerEventType.exception) {
+        setState(() {
+          error = 'Loading source...';
+        });
+        _play(widget.playlists[selectIndex].link.trim());
+      }
     });
+  }
+
+  _play(String url) {
+    controller.setupDataSource(
+      BetterPlayerDataSource(
+        BetterPlayerDataSourceType.network,
+        url,
+        bufferingConfiguration: const BetterPlayerBufferingConfiguration(
+          minBufferMs: 50000,
+          maxBufferMs: 100000,
+          // bufferForPlaybackMs: 1000,
+          // bufferForPlaybackAfterRebufferMs: 1000,
+        ),
+        videoFormat: url.split('.').last == 'm3u8'
+            ? BetterPlayerVideoFormat.hls
+            : BetterPlayerVideoFormat.other,
+      ),
+    );
+    controller.play();
   }
 
   void _changeBoxFit() {
@@ -195,14 +200,10 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
           autoScrollController.highlight(i);
           break;
         case LogicalKeyboardKey.select:
-          controller.videoPlayerController
-              ?.setNetworkDataSource(widget.playlists[selectIndex].link);
-          controller.play();
+          _play(widget.playlists[selectIndex].link.trim());
           break;
         case LogicalKeyboardKey.enter:
-          controller.videoPlayerController
-              ?.setNetworkDataSource(widget.playlists[selectIndex].link);
-          controller.play();
+          _play(widget.playlists[selectIndex].link.trim());
           break;
         default:
       }
@@ -265,9 +266,7 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
                     selectIndex = prewId;
                   });
                   controller.setControlsVisibility(true);
-                  controller.videoPlayerController
-                      ?.setNetworkDataSource(widget.playlists[prewId].link);
-                  controller.play();
+                  _play(widget.playlists[prewId].link.trim());
                 }
                 break;
               case 2:
@@ -296,9 +295,7 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
                     selectIndex = nextId;
                   });
                   controller.setControlsVisibility(true);
-                  controller.videoPlayerController
-                      ?.setNetworkDataSource(widget.playlists[nextId].link);
-                  controller.play();
+                  _play(widget.playlists[nextId].link.trim());
                 }
                 break;
               case 6:
@@ -335,9 +332,7 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
                     selectIndex = prewId;
                   });
                   controller.setControlsVisibility(true);
-                  controller.videoPlayerController
-                      ?.setNetworkDataSource(widget.playlists[prewId].link);
-                  controller.play();
+                  _play(widget.playlists[prewId].link.trim());
                 }
                 break;
               case 2:
@@ -366,9 +361,7 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
                     selectIndex = nextId;
                   });
                   controller.setControlsVisibility(true);
-                  controller.videoPlayerController
-                      ?.setNetworkDataSource(widget.playlists[nextId].link);
-                  controller.play();
+                  _play(widget.playlists[nextId].link.trim());
                 }
                 break;
               case 6:
@@ -384,6 +377,7 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
                 _changeBoxFit();
               default:
             }
+            break;
           default:
         }
       }
@@ -471,6 +465,15 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
                   ),
                 ),
               ),
+              error.isNotEmpty
+                  ? Positioned(
+                      top: 10,
+                      right: 10,
+                      child: Text(
+                        error,
+                        style: const TextStyle(color: Colors.white),
+                      ))
+                  : const SizedBox(),
               Visibility(
                 visible: loadPlayer,
                 child: const Center(
@@ -876,9 +879,7 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
                                       setState(() {
                                         selectIndex = i;
                                       });
-                                      controller.videoPlayerController
-                                          ?.setNetworkDataSource(e.link);
-                                      controller.play();
+                                      _play(e.link.trim());
                                     },
                                     child: AutoScrollTag(
                                       key: ValueKey(i),

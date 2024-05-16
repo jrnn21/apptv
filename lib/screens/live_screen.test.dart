@@ -2,16 +2,16 @@
 import 'dart:async';
 import 'dart:collection';
 import 'dart:io';
+import 'package:apptv02/providers/expire_provider.dart';
 import 'package:apptv02/providers/tv_provider.dart';
 import 'package:apptv02/utility/class.dart';
 import 'package:apptv02/utility/get_image.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:apptv02/widgets/b_player.dart';
+import 'package:better_player/better_player.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:video_player/video_player.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 import 'package:wakelock/wakelock.dart';
 
@@ -25,7 +25,7 @@ class LiveScreen extends StatefulWidget {
 class _LiveScreenState extends State<LiveScreen> {
   int itemsPerPage = 17;
   int currentPage = 0;
-  late VideoPlayerController controller;
+  late BetterPlayerController controller;
   ScrollController autoScrollController = ScrollController();
   ScrollController autoTvScrollController = ScrollController();
   FocusNode focusNodePlayer = FocusNode();
@@ -33,9 +33,7 @@ class _LiveScreenState extends State<LiveScreen> {
   List<M3UItem> gt = [];
   List<M3UItem> playlist = [];
   List<M3UItem> playlistFilter = [];
-  List<M3UItem> playlistFilterPlay = [];
   List<M3UItem> playlistPages = [];
-  M3UItem tv = M3UItem(title: '', link: '', groupTitle: '', logo: '');
   String gtSelected = '';
   String gtSelectedPlay = '';
   int selectedIndex = 0;
@@ -44,18 +42,12 @@ class _LiveScreenState extends State<LiveScreen> {
   int selectedIndexTv = 0;
   bool selectedTv = true;
   int selectedIndexTvPlayed = 0;
-  bool loadPlayer = true;
+  bool loadPlayer = false;
   int currPagePlay = 0;
   String errorPlay = '';
   bool show = true;
-  Timer timerlist = Timer(const Duration(milliseconds: 200), () {});
-  NumberFormat formatter = NumberFormat("00");
-  int durationInSeconds = 0;
-  double currentDuration = 0.0;
-  String resolution = "Unknown";
-  String fps = "Unknown";
-  bool showTvDetail = true;
-  Timer showTvDetailTimer = Timer(const Duration(milliseconds: 5000), () {});
+  Timer timer = Timer(const Duration(milliseconds: 200), () {});
+  String err = '';
 
   @override
   void initState() {
@@ -72,7 +64,8 @@ class _LiveScreenState extends State<LiveScreen> {
     autoTvScrollController.removeListener(_onScroll);
     autoTvScrollController.dispose();
     focusNodePlayer.dispose();
-    timerlist.cancel();
+    timer.cancel();
+
     Wakelock.disable();
     super.dispose();
   }
@@ -81,86 +74,62 @@ class _LiveScreenState extends State<LiveScreen> {
     playlist = context.read<TvProvider>().playlist;
     gt = context.read<TvProvider>().gt;
     playlistFilter = context.read<TvProvider>().playlistFilter;
-    playlistFilterPlay = playlistFilter;
     gtSelected = gt[0].groupTitle;
     gtSelectedPlay = gt[0].groupTitle;
-    tv = playlist[0];
-    _showTvDetails();
     loadNextPage();
     try {
-      controller = VideoPlayerController.networkUrl(
-        Uri.parse(tv.link.trim()),
+      controller = BetterPlayerController(
+        const BetterPlayerConfiguration(
+          autoPlay: true,
+          aspectRatio: 16 / 9,
+          fit: BoxFit.fill,
+          allowedScreenSleep: false,
+          controlsConfiguration: BetterPlayerControlsConfiguration(
+            showControls: false,
+          ),
+        ),
+        betterPlayerDataSource: BetterPlayerDataSource(
+          BetterPlayerDataSourceType.network,
+          playlist[0].link.trim(),
+          bufferingConfiguration: const BetterPlayerBufferingConfiguration(
+            minBufferMs: 12000, // 30 seconds
+            maxBufferMs: 60000, // 30 seconds
+            // bufferForPlaybackMs: 1000, // 30 seconds
+            // bufferForPlaybackAfterRebufferMs: 1000,
+          ),
+        ),
       );
-
-      Future.delayed(const Duration(milliseconds: 1500), () {
-        controller
-          ..initialize().then((_) async {
-            controller.play();
-            setState(() {
-              resolution =
-                  '${controller.value.size.width.toInt()}x${controller.value.size.height.toInt()}';
-            });
-          })
-          ..addListener(() {
-            _listener();
+      controller.addEventsListener((p0) {
+        if (controller.isBuffering()!) {
+          loadPlayer = true;
+        }
+        if (p0.betterPlayerEventType == BetterPlayerEventType.bufferingEnd) {
+          loadPlayer = false;
+        }
+        // setState(() {
+        //   err = p0.betterPlayerEventType.name;
+        // });
+        if (p0.betterPlayerEventType == BetterPlayerEventType.finished) {
+          controller.retryDataSource();
+          controller.play();
+        }
+        if (p0.betterPlayerEventType == BetterPlayerEventType.exception) {
+          BetterPlayerEventType.exception.name;
+          setState(() {
+            errorPlay = 'Error Link Server';
           });
+        }
+        if (p0.betterPlayerEventType == BetterPlayerEventType.play) {
+          setState(() {
+            errorPlay = '';
+          });
+        }
       });
 
       return [];
     } catch (e) {
       return [];
     }
-  }
-
-  _play(M3UItem m) {
-    setState(() {
-      loadPlayer = true;
-      tv = m;
-      errorPlay = '';
-    });
-    _showTvDetails();
-    controller.dispose();
-    controller = VideoPlayerController.networkUrl(Uri.parse(m.link))
-      ..initialize().then((_) async {
-        controller.play();
-        setState(() {
-          resolution =
-              '${controller.value.size.width.toInt()}x${controller.value.size.height.toInt()}';
-        });
-      })
-      ..addListener(() {
-        _listener();
-      });
-  }
-
-  _listener() {
-    loadPlayer = controller.value.isBuffering;
-    if (controller.value.isPlaying) {
-      loadPlayer = false;
-    }
-    if (controller.value.buffered.isNotEmpty) {
-      durationInSeconds = controller.value.buffered.last.end.inSeconds;
-    }
-    if (controller.value.hasError) {
-      errorPlay = 'Link Server Error!';
-    }
-    if (controller.value.isCompleted) {
-      controller.play();
-    }
-    currentDuration = controller.value.position.inSeconds.toDouble();
-    setState(() {});
-  }
-
-  _showTvDetails() {
-    showTvDetailTimer.cancel();
-    setState(() {
-      showTvDetail = true;
-    });
-    showTvDetailTimer = Timer(const Duration(milliseconds: 3000), () {
-      setState(() {
-        showTvDetail = false;
-      });
-    });
   }
 
   void loadNextPage() {
@@ -224,21 +193,20 @@ class _LiveScreenState extends State<LiveScreen> {
                   setState(() {
                     selectedIndexTv = i;
                   });
+
                   break;
+
                 case LogicalKeyboardKey.arrowLeft:
                   setState(() {
                     selectedTv = false;
                     selectedIndexTv = 0;
                   });
                   break;
-                case LogicalKeyboardKey.arrowRight:
-                  setState(() {
-                    showPlaylist = false;
-                  });
-                  break;
                 case LogicalKeyboardKey.select:
-                  _play(playlistFilter[selectedIndexTv]);
-                  playlistFilterPlay = playlistFilter;
+                  controller.clearCache();
+                  controller.videoPlayerController?.setNetworkDataSource(
+                      playlistFilter[selectedIndexTv].link);
+                  controller.play();
                   gtSelectedPlay = gtSelected;
                   selectedIndexPlay = selectedIndex;
                   selectedIndexTvPlayed = selectedIndexTv;
@@ -247,8 +215,10 @@ class _LiveScreenState extends State<LiveScreen> {
                   setState(() {});
                   break;
                 case LogicalKeyboardKey.enter:
-                  _play(playlistFilter[selectedIndexTv]);
-                  playlistFilterPlay = playlistFilter;
+                  controller.clearCache();
+                  controller.videoPlayerController?.setNetworkDataSource(
+                      playlistFilter[selectedIndexTv].link);
+                  controller.play();
                   gtSelectedPlay = gtSelected;
                   selectedIndexPlay = selectedIndex;
                   selectedIndexTvPlayed = selectedIndexTv;
@@ -284,8 +254,8 @@ class _LiveScreenState extends State<LiveScreen> {
                   await autoScrollController.animateTo(selectedIndex * 40,
                       duration: const Duration(milliseconds: 200),
                       curve: Curves.linear);
-                  timerlist.cancel();
-                  timerlist = Timer(const Duration(milliseconds: 350), () {
+                  timer.cancel();
+                  timer = Timer(const Duration(milliseconds: 200), () {
                     setState(() {
                       show = true;
                     });
@@ -313,8 +283,8 @@ class _LiveScreenState extends State<LiveScreen> {
                   await autoScrollController.animateTo(selectedIndex * 40,
                       duration: const Duration(milliseconds: 200),
                       curve: Curves.linear);
-                  timerlist.cancel();
-                  timerlist = Timer(const Duration(milliseconds: 350), () {
+                  timer.cancel();
+                  timer = Timer(const Duration(milliseconds: 200), () {
                     setState(() {
                       show = true;
                     });
@@ -355,7 +325,10 @@ class _LiveScreenState extends State<LiveScreen> {
               if (se < 0) {
                 break;
               }
-              _play(playlistFilterPlay[se]);
+              controller.clearCache();
+              controller.videoPlayerController
+                  ?.setNetworkDataSource(playlistFilter[se].link);
+              controller.play();
               setState(() {
                 selectedIndexTvPlayed = se;
                 selectedIndexTv = se;
@@ -369,7 +342,10 @@ class _LiveScreenState extends State<LiveScreen> {
               if (se > playlistFilter.length - 1) {
                 break;
               }
-              _play(playlistFilterPlay[se]);
+              controller.clearCache();
+              controller.videoPlayerController
+                  ?.setNetworkDataSource(playlistFilter[se].link);
+              controller.play();
               setState(() {
                 selectedIndexTvPlayed = se;
                 selectedIndexTv = se;
@@ -380,15 +356,6 @@ class _LiveScreenState extends State<LiveScreen> {
               break;
             case LogicalKeyboardKey.arrowLeft:
               setState(() {
-                show = false;
-              });
-              timerlist.cancel();
-              timerlist = Timer(const Duration(milliseconds: 350), () {
-                setState(() {
-                  show = true;
-                });
-              });
-              setState(() {
                 selectedIndex = selectedIndexPlay;
                 selectedIndexTv = selectedIndexTvPlayed;
                 playlistFilter = playlist
@@ -398,13 +365,13 @@ class _LiveScreenState extends State<LiveScreen> {
                 playlistPages = [];
               });
               loadPlayPage(currPagePlay);
-              setState(() {
-                showPlaylist = true;
-                selectedTv = true;
-              });
               Timer timer = Timer(const Duration(seconds: 1), () {});
               timer.cancel();
               timer = Timer(const Duration(milliseconds: 500), () {
+                setState(() {
+                  showPlaylist = true;
+                  selectedTv = true;
+                });
                 autoTvScrollController.animateTo(
                     (selectedIndexTvPlayed - 4) * 50,
                     duration: const Duration(milliseconds: 200),
@@ -425,18 +392,15 @@ class _LiveScreenState extends State<LiveScreen> {
 
   @override
   Widget build(BuildContext context) {
+    TimeExpire timeExpire = context.watch<ExpireProvider>().timer;
+    if (timeExpire.expireTime < timeExpire.correntTime) {
+      context.read<ExpireProvider>().reStartApp(context);
+    }
     return WillPopScope(
       onWillPop: () async {
         if (showPlaylist) {
           setState(() {
             showPlaylist = false;
-          });
-          return false;
-        }
-        if (showTvDetailTimer.isActive) {
-          showTvDetailTimer.cancel();
-          setState(() {
-            showTvDetail = false;
           });
           return false;
         }
@@ -461,6 +425,7 @@ class _LiveScreenState extends State<LiveScreen> {
                       onTap: () async {
                         setState(() {
                           selectedIndex = selectedIndexPlay;
+                          gtSelected = gtSelectedPlay;
                           selectedIndexTv = selectedIndexTvPlayed;
                           playlistFilter = playlist
                               .where((e) => e.groupTitle == gtSelectedPlay)
@@ -469,24 +434,14 @@ class _LiveScreenState extends State<LiveScreen> {
                           playlistPages = [];
                         });
                         loadPlayPage(currPagePlay);
-                        setState(() {
-                          show = false;
-                        });
-                        timerlist.cancel();
-                        timerlist =
-                            Timer(const Duration(milliseconds: 350), () {
-                          setState(() {
-                            show = true;
-                          });
-                        });
-                        setState(() {
-                          showPlaylist = !showPlaylist;
-                          selectedTv = true;
-                        });
-                        Timer timerl =
+                        Timer timer =
                             Timer(const Duration(milliseconds: 500), () {});
-                        timerl.cancel();
-                        timerl = Timer(const Duration(milliseconds: 500), () {
+                        timer.cancel();
+                        timer = Timer(const Duration(seconds: 1), () {
+                          setState(() {
+                            showPlaylist = !showPlaylist;
+                            selectedTv = true;
+                          });
                           autoTvScrollController.animateTo(
                               (selectedIndexTvPlayed - 4) * 50,
                               duration: const Duration(milliseconds: 200),
@@ -499,65 +454,10 @@ class _LiveScreenState extends State<LiveScreen> {
                       child: Container(
                         color: Colors.black,
                         width: MediaQuery.of(context).size.width,
-                        child: SizedBox.expand(
-                          child: FittedBox(
-                            fit: BoxFit.fill,
-                            child: SizedBox(
-                              width: controller.value.size.width,
-                              height: controller.value.size.height,
-                              child: VideoPlayer(controller),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      bottom: 0,
-                      child: Opacity(
-                        opacity: showTvDetail ? 1 : 0,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 10, horizontal: 30),
-                          color: const Color.fromARGB(137, 43, 43, 43),
-                          height: 80,
-                          width: MediaQuery.of(context).size.width,
-                          child: Row(
-                            children: [
-                              CachedNetworkImage(
-                                imageUrl: tv.logo,
-                                width: 100,
-                              ),
-                              const SizedBox(width: 20),
-                              Column(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    tv.title,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontFamilyFallback: ['radley', 'koulen'],
-                                    ),
-                                  ),
-                                  const SizedBox(height: 10),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        vertical: 1, horizontal: 3),
-                                    decoration: BoxDecoration(
-                                        color: Colors.white,
-                                        borderRadius: BorderRadius.circular(2)),
-                                    child: Text(
-                                      resolution,
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                  )
-                                ],
-                              )
-                            ],
+                        child: Center(
+                          child: AspectRatio(
+                            aspectRatio: 16 / 9,
+                            child: BPlayer(controller: controller),
                           ),
                         ),
                       ),
@@ -577,6 +477,13 @@ class _LiveScreenState extends State<LiveScreen> {
                         child: CircularProgressIndicator(color: Colors.white),
                       ),
                     ),
+                    // Positioned(
+                    //     top: 10,
+                    //     right: 10,
+                    //     child: Text(
+                    //       err,
+                    //       style: const TextStyle(color: Colors.white),
+                    //     )),
                     _playlist(context),
                   ],
                 ),
@@ -585,155 +492,162 @@ class _LiveScreenState extends State<LiveScreen> {
     );
   }
 
-  Widget _playlist(BuildContext context) {
-    return AnimatedContainer(
-      transform: Matrix4.translationValues(
-          selectedTv && showPlaylist
-              ? -240.0
-              : showPlaylist
-                  ? 0
-                  : -557,
-          0.0,
-          0.0),
-      duration: const Duration(milliseconds: 100),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Container(
-            width: 240,
-            height: MediaQuery.of(context).size.height,
-            padding: const EdgeInsets.all(5),
-            decoration: BoxDecoration(
-              color: const Color.fromARGB(255, 27, 27, 27).withOpacity(0.8),
-              border: const Border(right: BorderSide(color: Colors.white12)),
-            ),
-            child: ListView(
-              controller: autoScrollController,
-              scrollDirection: Axis.vertical,
-              children: UnmodifiableListView(
-                [
-                  SizedBox(
-                    height: 200,
-                    child: Center(
-                      child: Image.asset(
-                        'images/logolive.png',
-                        width: 160,
+  Visibility _playlist(BuildContext context) {
+    return Visibility(
+      visible: true,
+      child: AnimatedContainer(
+        transform: Matrix4.translationValues(
+            selectedTv && showPlaylist
+                ? -240.0
+                : showPlaylist
+                    ? 0
+                    : -557,
+            0.0,
+            0.0),
+        duration: const Duration(milliseconds: 100),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Container(
+              width: 240,
+              height: MediaQuery.of(context).size.height,
+              padding: const EdgeInsets.all(5),
+              decoration: BoxDecoration(
+                color: const Color.fromARGB(255, 27, 27, 27).withOpacity(0.8),
+                border: const Border(right: BorderSide(color: Colors.white12)),
+              ),
+              child: ListView(
+                controller: autoScrollController,
+                scrollDirection: Axis.vertical,
+                children: UnmodifiableListView(
+                  [
+                    SizedBox(
+                      height: 200,
+                      child: Center(
+                        child: Image.asset(
+                          'images/logolive.png',
+                          width: 160,
+                        ),
                       ),
                     ),
-                  ),
-                  ...gt
-                      .asMap()
-                      .map((i, e) => MapEntry(
-                          i,
-                          GestureDetector(
-                            onTap: () => setState(() {
-                              gtSelected = gt[i].groupTitle;
-                              selectedIndex = i;
-                              autoScrollController.animateTo(i * 40,
-                                  duration: const Duration(milliseconds: 200),
-                                  curve: Curves.linear);
+                    ...gt
+                        .asMap()
+                        .map((i, e) => MapEntry(
+                            i,
+                            GestureDetector(
+                              onTap: () => setState(() {
+                                gtSelected = gt[i].groupTitle;
+                                selectedIndex = i;
+                                autoScrollController.animateTo(i * 40,
+                                    duration: const Duration(milliseconds: 200),
+                                    curve: Curves.linear);
 
-                              playlistFilter = playlist
-                                  .where((e) => e.groupTitle == gtSelected)
-                                  .toList();
-                              currentPage = 0;
-                              playlistPages = [];
-                              setState(() {});
-                              loadNextPage();
-                            }),
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 200),
-                              width: double.infinity,
-                              padding: EdgeInsets.only(
-                                  left: selectedIndex == i ? 20 : 10,
-                                  right: 0,
-                                  top: 10,
-                                  bottom: 10),
-                              decoration: BoxDecoration(
-                                color: selectedIndex == i && !selectedTv
-                                    ? const Color.fromARGB(255, 10, 101, 175)
-                                    : Colors.transparent,
-                                borderRadius: BorderRadius.circular(8),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: const Color.fromARGB(255, 0, 0, 0)
-                                        .withOpacity(
-                                            selectedIndex == i && !selectedTv
-                                                ? 0.5
-                                                : 0),
-                                    spreadRadius: 2,
-                                    blurRadius: 2,
-                                    offset: const Offset(
-                                        0, 1), // changes position of shadow
+                                playlistFilter = playlist
+                                    .where((e) => e.groupTitle == gtSelected)
+                                    .toList();
+                                currentPage = 0;
+                                playlistPages = [];
+                                setState(() {});
+                                loadNextPage();
+                              }),
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                width: double.infinity,
+                                padding: EdgeInsets.only(
+                                    left: selectedIndex == i ? 20 : 10,
+                                    right: 0,
+                                    top: 10,
+                                    bottom: 10),
+                                decoration: BoxDecoration(
+                                  color: selectedIndex == i && !selectedTv
+                                      ? const Color.fromARGB(255, 10, 101, 175)
+                                      : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(8),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: const Color.fromARGB(255, 0, 0, 0)
+                                          .withOpacity(
+                                              selectedIndex == i && !selectedTv
+                                                  ? 0.5
+                                                  : 0),
+                                      spreadRadius: 2,
+                                      blurRadius: 2,
+                                      offset: const Offset(
+                                          0, 1), // changes position of shadow
+                                    ),
+                                  ],
+                                ),
+                                child: Text(
+                                  e.groupTitle,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
                                   ),
-                                ],
-                              ),
-                              child: Text(
-                                e.groupTitle,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
-                            ),
-                          )))
-                      .values,
-                  const SizedBox(height: 400),
-                ],
+                            )))
+                        .values,
+                    const SizedBox(height: 400),
+                  ],
+                ),
               ),
             ),
-          ),
-          Container(
-            width: 317,
-            height: MediaQuery.of(context).size.height,
-            padding: const EdgeInsets.all(5),
-            decoration: BoxDecoration(
-              color: const Color.fromARGB(255, 27, 27, 27).withOpacity(0.8),
-              border: const Border(right: BorderSide(color: Colors.white12)),
-            ),
-            child: ListView(
-              controller: autoTvScrollController,
-              scrollDirection: Axis.vertical,
-              children: UnmodifiableListView(show
-                  ? [
-                      ...playlistPages
-                          .asMap()
-                          .map((i, e) => MapEntry(
-                              i,
-                              TvCom(
-                                autoTvScrollController: autoTvScrollController,
-                                ontap: () {
-                                  _play(e);
-                                  setState(() {
-                                    selectedIndexTv = i;
-                                    playlistFilterPlay = playlistFilter;
-                                    selectedTv = true;
-                                    selectedIndexPlay = selectedIndex;
-                                    gtSelectedPlay = gtSelected;
-                                    selectedIndexTvPlayed = i;
-                                    currPagePlay = currentPage - 1;
-                                  });
+            Container(
+              width: 317,
+              height: MediaQuery.of(context).size.height,
+              padding: const EdgeInsets.all(5),
+              decoration: BoxDecoration(
+                color: const Color.fromARGB(255, 27, 27, 27).withOpacity(0.8),
+                border: const Border(right: BorderSide(color: Colors.white12)),
+              ),
+              child: ListView(
+                controller: autoTvScrollController,
+                scrollDirection: Axis.vertical,
+                children: UnmodifiableListView(show
+                    ? [
+                        ...playlistPages
+                            .asMap()
+                            .map((i, e) => MapEntry(
+                                i,
+                                TvCom(
+                                  autoTvScrollController:
+                                      autoTvScrollController,
+                                  ontap: () {
+                                    controller.videoPlayerController!.refresh();
+                                    controller.videoPlayerController
+                                        ?.setNetworkDataSource(e.link);
+                                    controller.play();
+                                    setState(() {
+                                      selectedIndexTv = i;
+                                      selectedTv = true;
+                                      selectedIndexPlay = selectedIndex;
+                                      gtSelectedPlay = gtSelected;
+                                      selectedIndexTvPlayed = i;
+                                      currPagePlay = currentPage - 1;
+                                    });
 
-                                  autoTvScrollController.animateTo((i - 4) * 50,
-                                      duration:
-                                          const Duration(milliseconds: 200),
-                                      curve: Curves.linear);
-                                  setState(() {
-                                    selectedIndexTv = i;
-                                  });
-                                },
-                                i: i,
-                                e: e,
-                                selectedIndexTv: selectedIndexTv,
-                                selectedTv: selectedTv,
-                              )))
-                          .values,
-                      // const SizedBox(height: 400),
-                    ]
-                  : []),
+                                    autoTvScrollController.animateTo(
+                                        (i - 4) * 50,
+                                        duration:
+                                            const Duration(milliseconds: 200),
+                                        curve: Curves.linear);
+                                    setState(() {
+                                      selectedIndexTv = i;
+                                    });
+                                  },
+                                  i: i,
+                                  e: e,
+                                  selectedIndexTv: selectedIndexTv,
+                                  selectedTv: selectedTv,
+                                )))
+                            .values,
+                        // const SizedBox(height: 400),
+                      ]
+                    : []),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -836,7 +750,7 @@ class _TvComState extends State<TvCom> {
                 bottom: 5,
                 left: widget.selectedTv && widget.selectedIndexTv == widget.i
                     ? 20
-                    : 10),
+                    : 0),
             child: Row(
               children: [
                 const SizedBox(width: 3),

@@ -1,6 +1,7 @@
 import 'package:apptv02/gql/app.dart';
 import 'package:apptv02/gql/graphql.dart';
 import 'package:apptv02/models/app_version.dart';
+import 'package:apptv02/models/link.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:graphql/client.dart';
@@ -13,14 +14,25 @@ class AppProvider extends ChangeNotifier {
   GraphQLClient client = cli();
   String? _appCurrentVersion;
   AppVersion? _app;
-  double _progressValue = 0;
+  double _progressValue = 0.0;
+  LinkApp _linkApp = LinkApp(tv: '', movies: '', series: '');
 
   String? get appCurrentVersion => _appCurrentVersion;
   double get progressValue => _progressValue;
   AppVersion? get app => _app;
+  LinkApp get linkApp => _linkApp;
 
   init() {
     getVersionNumber();
+  }
+
+  getLinkApp() async {
+    QueryResult res = await client.query(QueryOptions(document: LINK_APP));
+    if (res.data != null) {
+      final l = res.data!["link"]["data"]["attributes"];
+      _linkApp = LinkApp(tv: l["tv"], movies: l["movies"], series: l["series"]);
+    }
+    notifyListeners();
   }
 
   Future<void> getVersionNumber() async {
@@ -38,34 +50,36 @@ class AppProvider extends ChangeNotifier {
 
   // https://raw.githubusercontent.com/jrnn21/apptvApk/main/appv1.apk
   void networkInstallApk({required AppVersion app}) async {
-    if (_progressValue != 0 && _progressValue < 1) {
+    if (_progressValue != 0.0 && _progressValue < 1) {
       print("Wait a moment, downloading");
       return;
     }
+
+    _progressValue = 0.0;
+    var appDocDir = await getTemporaryDirectory();
+    String savePath = "${appDocDir.path}/appv${app.version}.apk";
+
+    await Dio().download(app.appUrl, savePath,
+        onReceiveProgress: (count, total) {
+      final value = count / total;
+      if (_progressValue != value) {
+        if (_progressValue < 1.0) {
+          _progressValue = count / total;
+        } else {
+          _progressValue = 0.0;
+        }
+        // print("${(_progressValue * 100).toStringAsFixed(0)}%");
+        notifyListeners();
+      }
+    });
     var status = await Permission.requestInstallPackages.request();
     if (status.isGranted) {
-      _progressValue = 0.0;
-      var appDocDir = await getTemporaryDirectory();
-      String savePath = "${appDocDir.path}/appv${app.version}.apk";
-
-      await Dio().download(app.appUrl, savePath,
-          onReceiveProgress: (count, total) {
-        final value = count / total;
-        if (_progressValue != value) {
-          if (_progressValue < 1.0) {
-            _progressValue = count / total;
-          } else {
-            _progressValue = 0.0;
-          }
-          // print("${(_progressValue * 100).toStringAsFixed(0)}%");
-          notifyListeners();
-        }
-      });
       final res = await InstallPlugin.install(savePath);
       print(
           "install apk ${res['isSuccess'] == true ? 'success' : 'fail:${res['errorMessage'] ?? ''}'}");
     } else {
-      // Permission denied
+      _progressValue = 0.0;
+      notifyListeners();
     }
   }
 }

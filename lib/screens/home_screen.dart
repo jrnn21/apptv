@@ -1,5 +1,7 @@
 // ignore_for_file: use_build_context_synchronously, deprecated_member_use, unused_field
 
+import 'package:apptv02/models/link.dart';
+import 'package:apptv02/providers/app_provider.dart';
 import 'package:apptv02/providers/expire_provider.dart';
 import 'package:apptv02/providers/movies_provider.dart';
 import 'package:apptv02/providers/series_provider.dart';
@@ -27,6 +29,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   double _moviesDownloadProgress = 0.0;
   double _tvDownloadProgress = 0.0;
   FocusNode node = FocusNode();
+  late LinkApp linkApp;
+
   TextStyle style = const TextStyle(
     color: Colors.white,
     // fontWeight: FontWeight.bold,
@@ -73,6 +77,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   @override
   void initState() {
     WidgetsBinding.instance.addObserver(this);
+    linkApp = context.read<AppProvider>().linkApp;
     super.initState();
   }
 
@@ -117,7 +122,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               Navigator.of(context).push(
                   MaterialPageRoute(builder: (context) => const LiveScreen()));
             } else if (_tvDownloadProgress == 0.0) {
-              Future<bool> isDone = context.read<TvProvider>().init();
+              Future<bool> isDone = context.read<TvProvider>().init(linkApp.tv);
               if (await isDone) {
                 Navigator.of(context).push(MaterialPageRoute(
                     builder: (context) => const LiveScreen()));
@@ -128,7 +133,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               Navigator.of(context).push(MaterialPageRoute(
                   builder: (context) => const MoviesScreen()));
             } else if (_moviesDownloadProgress == 0.0) {
-              Future<bool> isDone = context.read<MoviesProvider>().init();
+              Future<bool> isDone =
+                  context.read<MoviesProvider>().init(linkApp.movies);
               if (await isDone) {
                 Navigator.of(context).push(MaterialPageRoute(
                     builder: (context) => const MoviesScreen()));
@@ -139,7 +145,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               Navigator.of(context).push(MaterialPageRoute(
                   builder: (context) => const SeriesScreen()));
             } else if (_seriesDownloadProgress == 0.0) {
-              Future<bool> isDone = context.read<SeriesProvider>().init();
+              Future<bool> isDone =
+                  context.read<SeriesProvider>().init(linkApp.series);
               if (await isDone) {
                 Navigator.of(context).push(MaterialPageRoute(
                     builder: (context) => const SeriesScreen()));
@@ -153,7 +160,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               Navigator.of(context).push(
                   MaterialPageRoute(builder: (context) => const LiveScreen()));
             } else if (_tvDownloadProgress == 0.0) {
-              Future<bool> isDone = context.read<TvProvider>().init();
+              Future<bool> isDone = context.read<TvProvider>().init(linkApp.tv);
               if (await isDone) {
                 Navigator.of(context).push(MaterialPageRoute(
                     builder: (context) => const LiveScreen()));
@@ -164,7 +171,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               Navigator.of(context).push(MaterialPageRoute(
                   builder: (context) => const MoviesScreen()));
             } else if (_moviesDownloadProgress == 0.0) {
-              Future<bool> isDone = context.read<MoviesProvider>().init();
+              Future<bool> isDone =
+                  context.read<MoviesProvider>().init(linkApp.movies);
               if (await isDone) {
                 Navigator.of(context).push(MaterialPageRoute(
                     builder: (context) => const MoviesScreen()));
@@ -175,7 +183,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               Navigator.of(context).push(MaterialPageRoute(
                   builder: (context) => const SeriesScreen()));
             } else if (_seriesDownloadProgress == 0.0) {
-              Future<bool> isDone = context.read<SeriesProvider>().init();
+              Future<bool> isDone =
+                  context.read<SeriesProvider>().init(linkApp.series);
               if (await isDone) {
                 Navigator.of(context).push(MaterialPageRoute(
                     builder: (context) => const SeriesScreen()));
@@ -193,7 +202,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     double seriesDownloadProgress = context.watch<SeriesProvider>().download;
     double moviesDownloadProgress = context.watch<MoviesProvider>().download;
     double tvDownloadProgress = context.watch<TvProvider>().download;
-    // TimeExpire timeExpire = context.watch<ExpireProvider>().timer;
+    TimeExpire timeExpire = context.watch<ExpireProvider>().timer;
     setState(() {
       _seriesDownloadProgress = seriesDownloadProgress;
       _moviesDownloadProgress = moviesDownloadProgress;
@@ -239,7 +248,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                   builder: (context) => const LiveScreen()));
                             } else if (tvDownloadProgress == 0.0) {
                               Future<bool> isDone =
-                                  context.read<TvProvider>().init();
+                                  context.read<TvProvider>().init(linkApp.tv);
                               if (await isDone) {
                                 Navigator.of(context).push(MaterialPageRoute(
                                     builder: (context) => const LiveScreen()));
@@ -359,8 +368,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                               Navigator.of(context).push(MaterialPageRoute(
                                   builder: (context) => const MoviesScreen()));
                             } else if (moviesDownloadProgress == 0.0) {
-                              Future<bool> isDone =
-                                  context.read<MoviesProvider>().init();
+                              Future<bool> isDone = context
+                                  .read<MoviesProvider>()
+                                  .init(linkApp.movies);
                               if (await isDone) {
                                 Navigator.of(context).push(MaterialPageRoute(
                                     builder: (context) =>
@@ -478,8 +488,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                               Navigator.of(context).push(MaterialPageRoute(
                                   builder: (context) => const SeriesScreen()));
                             } else if (seriesDownloadProgress == 0.0) {
-                              Future<bool> isDone =
-                                  context.read<SeriesProvider>().init();
+                              Future<bool> isDone = context
+                                  .read<SeriesProvider>()
+                                  .init(linkApp.series);
                               if (await isDone) {
                                 Navigator.of(context).push(MaterialPageRoute(
                                     builder: (context) =>
@@ -580,46 +591,48 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   ],
                 ),
               ),
-              // Positioned(
-              //   top: 5,
-              //   left: 10,
-              //   child: Center(
-              //     child: Row(
-              //       children: [
-              //         Text('ផុតកំណត់ៈ ', style: style),
-              //         AnimatedFlipCounter(
-              //             value: timeExpire.days, textStyle: style),
-              //         Text(' ថ្ងៃ', style: style),
-              //         const SizedBox(width: 10),
-              //         Text('${timeExpire.hours} ម៉ោង', style: style),
-              //         const SizedBox(width: 10),
-              //         Text('${timeExpire.minutes} នាទី', style: style),
-              //         const SizedBox(width: 10),
-              //         Text('${timeExpire.seconds} វិនាទី', style: style),
-              //       ],
-              //     ),
-              //   ),
-              // ),
               Positioned(
-                  top: 20,
-                  left: 20,
-                  child: FlipClockPlus.reverseCountdown(
-                    duration: durationExpire,
-                    digitColor: Colors.white,
-                    backgroundColor: Colors.black,
-                    digitSize: 16.0,
-                    centerGapSpace: 0.0,
-                    width: 20,
-                    height: 25,
-                    flipDirection: FlipDirection.up,
-                    spacing: const EdgeInsets.symmetric(horizontal: 1),
-                    separator: const Text(':', style: TextStyle(fontSize: 20)),
-                    borderRadius: const BorderRadius.all(Radius.circular(3.0)),
-                    daysLabelStr: 'ថ្ងៃ',
-                    hoursLabelStr: 'ម៉ោង',
-                    minutesLabelStr: 'នាទី',
-                    secondsLabelStr: 'វិនាទី',
-                  ))
+                top: 20,
+                left: 20,
+                child: Center(
+                  child: Row(
+                    children: [
+                      Text('ផុតកំណត់ៈ '),
+                      AnimatedFlipCounter(value: timeExpire.days),
+                      Text(' ថ្ងៃ'),
+                      const SizedBox(width: 10),
+                      Text('${timeExpire.hours} ម៉ោង'),
+                      const SizedBox(width: 10),
+                      Text('${timeExpire.minutes} នាទី'),
+                      const SizedBox(width: 10),
+                      // Text('${timeExpire.seconds} វិនាទី', style: style),
+                      AnimatedFlipCounter(value: timeExpire.seconds),
+                      Text(' វិនាទី'),
+                    ],
+                  ),
+                ),
+              ),
+              // Positioned(
+              //   top: 20,
+              //   left: 20,
+              //   child: FlipClockPlus.reverseCountdown(
+              //     duration: durationExpire,
+              //     digitColor: Colors.white,
+              //     backgroundColor: Colors.black,
+              //     digitSize: 16.0,
+              //     centerGapSpace: 0.0,
+              //     width: 20,
+              //     height: 25,
+              //     flipDirection: FlipDirection.up,
+              //     spacing: const EdgeInsets.symmetric(horizontal: 1),
+              //     separator: const Text(':', style: TextStyle(fontSize: 20)),
+              //     borderRadius: const BorderRadius.all(Radius.circular(3.0)),
+              //     daysLabelStr: 'ថ្ងៃ',
+              //     hoursLabelStr: 'ម៉ោង',
+              //     minutesLabelStr: 'នាទី',
+              //     secondsLabelStr: 'វិនាទី',
+              //   ),
+              // )
             ],
           ),
         ),
