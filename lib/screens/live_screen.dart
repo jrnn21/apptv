@@ -56,6 +56,7 @@ class _LiveScreenState extends State<LiveScreen> {
   String fps = "Unknown";
   bool showTvDetail = true;
   Timer showTvDetailTimer = Timer(const Duration(milliseconds: 5000), () {});
+  String eeee = 'Unknown';
 
   @override
   void initState() {
@@ -143,6 +144,7 @@ class _LiveScreenState extends State<LiveScreen> {
     }
     if (controller.value.hasError) {
       errorPlay = 'Link Server Error!';
+      eeee = controller.value.errorDescription!;
     }
     if (controller.value.isCompleted) {
       controller.play();
@@ -562,12 +564,14 @@ class _LiveScreenState extends State<LiveScreen> {
                         ),
                       ),
                     ),
-                    Visibility(
-                      visible: errorPlay.isNotEmpty,
-                      child: Center(
-                        child: Text(
-                          errorPlay,
-                          style: const TextStyle(color: Colors.white),
+                    Positioned(
+                      right: 20,
+                      bottom: 20,
+                      child: Text(
+                        eeee,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),

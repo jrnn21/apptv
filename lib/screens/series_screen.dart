@@ -109,19 +109,9 @@ class _SeriesScreenState extends State<SeriesScreen> {
 
   void handlePressOnMovie(RawKeyEvent event) async {
     int i = 0;
+    double itemHeight = h * 0.4132332222;
     switch (event.logicalKey) {
-      case LogicalKeyboardKey.select:
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) => SeriesPlaylistScreen(
-              playlists: allMoviesEp
-                  .where((ep) => ep.title == playlistPages[selectMovie].title)
-                  .toList(),
-            ),
-          ),
-        );
-        break;
-      case LogicalKeyboardKey.enter:
+      case LogicalKeyboardKey.enter || LogicalKeyboardKey.select:
         Navigator.of(context).push(
           MaterialPageRoute(
             builder: (context) => SeriesPlaylistScreen(
@@ -135,7 +125,6 @@ class _SeriesScreenState extends State<SeriesScreen> {
       case LogicalKeyboardKey.arrowRight:
         i = (selectMovie + 1).clamp(0, playlistPages.length - 1);
         int indexFloor = (i / 6).floor();
-        double itemHeight = h * 0.4173209876542593;
 
         await playlistScrollController.animateTo(
             indexFloor < 1
@@ -166,7 +155,6 @@ class _SeriesScreenState extends State<SeriesScreen> {
         if (selectMovie - 5 > 0) {
           i = (selectMovie - 6).clamp(0, playlistPages.length - 1);
           int indexFloor = (i / 6).floor();
-          double itemHeight = h * 0.4173209876542593;
 
           await playlistScrollController.animateTo(
               indexFloor < 1
@@ -184,7 +172,6 @@ class _SeriesScreenState extends State<SeriesScreen> {
       case LogicalKeyboardKey.arrowDown:
         i = (selectMovie + 6).clamp(0, playlistPages.length - 1);
         int indexFloor = (i / 6).floor();
-        double itemHeight = h * 0.4173209876542593;
 
         await playlistScrollController.animateTo(
             indexFloor < 1
@@ -276,7 +263,7 @@ class _SeriesScreenState extends State<SeriesScreen> {
                 height: MediaQuery.of(context).size.height,
                 decoration: const BoxDecoration(
                   image: DecorationImage(
-                    image: AssetImage('images/Bannersrb1.jpg'),
+                    image: AssetImage('images/BackgroundSeries.jpg'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -320,128 +307,174 @@ class _SeriesScreenState extends State<SeriesScreen> {
               ),
               AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
-                width: 235,
+                width: 250,
                 transform:
                     Matrix4.translationValues(showCate ? 0 : -235.0, 0.0, 0.0),
                 height: MediaQuery.of(context).size.height,
-                color: showCate
-                    ? const Color.fromARGB(160, 0, 0, 0)
-                    : Colors.transparent,
-                child: ClipRect(
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 1.0, sigmaY: 1.0),
-                    child: SizedBox(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
+                child: Row(
+                  children: [
+                    Container(
+                      color: showCate
+                          ? const Color.fromARGB(160, 0, 0, 0)
+                          : Colors.transparent,
+                      width: 235,
+                      child: ClipRect(
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: 1.0, sigmaY: 1.0),
+                          child: SizedBox(
                             child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Container(
-                                  margin:
-                                      const EdgeInsets.symmetric(horizontal: 5),
-                                  decoration: BoxDecoration(
-                                      color: selectCate == -1
-                                          ? Colors.blueAccent
-                                          : Colors.transparent,
-                                      borderRadius: BorderRadius.circular(5)),
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 2.0),
-                                  child: GestureDetector(
-                                      onTap: () {
-                                        playlistFilter = playlist;
-                                        setState(() {
-                                          currentPage = 0;
-                                          playlistPages = [];
-                                          selectCate = -1;
-                                          selectMovie = 0;
-                                        });
-                                        loadNextPage();
-                                        scrollToTop();
-                                      },
-                                      child: AnimatedContainer(
-                                        duration:
-                                            const Duration(milliseconds: 200),
-                                        padding: EdgeInsets.only(
-                                            left: selectCate == -1 ? 15 : 8,
-                                            top: 10,
-                                            bottom: 10),
-                                        width: double.infinity,
-                                        child: Flex(
-                                          direction: Axis.horizontal,
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            Text('🌏 រឿងទាំងអស់',
-                                                style: styleGT),
-                                          ],
-                                        ),
-                                      )),
-                                ),
-                                ...gt
-                                    .asMap()
-                                    .map((i, e) => MapEntry(
-                                          i,
-                                          Container(
-                                            margin: const EdgeInsets.symmetric(
-                                                horizontal: 5),
-                                            decoration: BoxDecoration(
-                                                color: selectCate == i
-                                                    ? Colors.blueAccent
-                                                    : Colors.transparent,
-                                                borderRadius:
-                                                    BorderRadius.circular(5)),
-                                            padding: const EdgeInsets.symmetric(
-                                                horizontal: 2.0),
-                                            child: GestureDetector(
-                                                onTap: () {
-                                                  playlistFilter = playlist
-                                                      .where((obj) =>
-                                                          obj.groupTitle ==
-                                                          e.groupTitle)
-                                                      .toList();
-                                                  setState(() {
-                                                    currentPage = 0;
-                                                    playlistPages = [];
-                                                    selectCate = i;
-                                                    selectMovie = 0;
-                                                  });
-                                                  loadNextPage();
-                                                  scrollToTop();
-                                                },
-                                                child: AnimatedContainer(
-                                                  duration: const Duration(
-                                                      milliseconds: 200),
-                                                  padding: EdgeInsets.only(
-                                                      left: selectCate == i
-                                                          ? 15
-                                                          : 8,
-                                                      top: 10,
-                                                      bottom: 10),
-                                                  width: double.infinity,
-                                                  child: Flex(
-                                                    direction: Axis.horizontal,
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment
-                                                            .spaceBetween,
-                                                    children: [
-                                                      Text(e.groupTitle,
-                                                          style: styleGT),
-                                                    ],
-                                                  ),
-                                                )),
-                                          ),
-                                        ))
-                                    .values
+                                Expanded(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
+                                    children: [
+                                      Container(
+                                        margin: const EdgeInsets.symmetric(
+                                            horizontal: 5),
+                                        decoration: BoxDecoration(
+                                            color: selectCate == -1
+                                                ? Colors.blueAccent
+                                                : Colors.transparent,
+                                            borderRadius:
+                                                BorderRadius.circular(5)),
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 2.0),
+                                        child: GestureDetector(
+                                            onTap: () {
+                                              playlistFilter = playlist;
+                                              setState(() {
+                                                currentPage = 0;
+                                                playlistPages = [];
+                                                selectCate = -1;
+                                                selectMovie = 0;
+                                              });
+                                              loadNextPage();
+                                              scrollToTop();
+                                            },
+                                            child: AnimatedContainer(
+                                              duration: const Duration(
+                                                  milliseconds: 200),
+                                              padding: EdgeInsets.only(
+                                                  left:
+                                                      selectCate == -1 ? 15 : 8,
+                                                  top: 10,
+                                                  bottom: 10),
+                                              width: double.infinity,
+                                              child: Flex(
+                                                direction: Axis.horizontal,
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceBetween,
+                                                children: [
+                                                  Text('🌏 រឿងទាំងអស់',
+                                                      style: styleGT),
+                                                ],
+                                              ),
+                                            )),
+                                      ),
+                                      ...gt
+                                          .asMap()
+                                          .map((i, e) => MapEntry(
+                                                i,
+                                                Container(
+                                                  margin: const EdgeInsets
+                                                      .symmetric(horizontal: 5),
+                                                  decoration: BoxDecoration(
+                                                      color: selectCate == i
+                                                          ? Colors.blueAccent
+                                                          : Colors.transparent,
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              5)),
+                                                  padding: const EdgeInsets
+                                                      .symmetric(
+                                                      horizontal: 2.0),
+                                                  child: GestureDetector(
+                                                      onTap: () {
+                                                        playlistFilter = playlist
+                                                            .where((obj) =>
+                                                                obj.groupTitle ==
+                                                                e.groupTitle)
+                                                            .toList();
+                                                        setState(() {
+                                                          currentPage = 0;
+                                                          playlistPages = [];
+                                                          selectCate = i;
+                                                          selectMovie = 0;
+                                                        });
+                                                        loadNextPage();
+                                                        scrollToTop();
+                                                      },
+                                                      child: AnimatedContainer(
+                                                        duration:
+                                                            const Duration(
+                                                                milliseconds:
+                                                                    200),
+                                                        padding: EdgeInsets.only(
+                                                            left:
+                                                                selectCate == i
+                                                                    ? 15
+                                                                    : 8,
+                                                            top: 10,
+                                                            bottom: 10),
+                                                        width: double.infinity,
+                                                        child: Flex(
+                                                          direction:
+                                                              Axis.horizontal,
+                                                          mainAxisAlignment:
+                                                              MainAxisAlignment
+                                                                  .spaceBetween,
+                                                          children: [
+                                                            Text(e.groupTitle,
+                                                                style: styleGT),
+                                                          ],
+                                                        ),
+                                                      )),
+                                                ),
+                                              ))
+                                          .values
+                                    ],
+                                  ),
+                                )
                               ],
                             ),
-                          )
-                        ],
+                          ),
+                        ),
                       ),
                     ),
-                  ),
+                    Container(
+                      width: 15,
+                      height: 50,
+                      decoration: const BoxDecoration(
+                        color: Color.fromARGB(218, 0, 0, 0),
+                        border: BorderDirectional(
+                          bottom: BorderSide(
+                              width: 2,
+                              color: Color.fromARGB(183, 255, 255, 255)),
+                          end: BorderSide(
+                              width: 2,
+                              color: Color.fromARGB(183, 255, 255, 255)),
+                          top: BorderSide(
+                              width: 2,
+                              color: Color.fromARGB(183, 255, 255, 255)),
+                        ),
+                        borderRadius: BorderRadius.only(
+                          topRight: Radius.circular(10),
+                          bottomRight: Radius.circular(10),
+                        ),
+                      ),
+                      child: const Center(
+                        child: Icon(
+                          Icons.arrow_forward_ios,
+                          color: Colors.white,
+                          size: 14,
+                        ),
+                      ),
+                    )
+                  ],
                 ),
               ),
             ],

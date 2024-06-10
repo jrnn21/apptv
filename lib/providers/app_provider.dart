@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'package:apptv02/gql/app.dart';
 import 'package:apptv02/gql/graphql.dart';
 import 'package:apptv02/models/app_version.dart';
@@ -16,6 +18,8 @@ class AppProvider extends ChangeNotifier {
   AppVersion? _app;
   double _progressValue = 0.0;
   LinkApp _linkApp = LinkApp(tv: '', movies: '', series: '');
+
+  bool _downloaded = false;
 
   String? get appCurrentVersion => _appCurrentVersion;
   double get progressValue => _progressValue;
@@ -45,33 +49,37 @@ class AppProvider extends ChangeNotifier {
       _app = AppVersion(version: a["version"], appUrl: a["appUrl"]);
     }
     notifyListeners();
-    print('App version: $version');
   }
 
   // https://raw.githubusercontent.com/jrnn21/apptvApk/main/appv1.apk
   void networkInstallApk({required AppVersion app}) async {
     if (_progressValue != 0.0 && _progressValue < 1) {
-      print("Wait a moment, downloading");
+      // print("Wait a moment, downloading");
       return;
     }
-
     _progressValue = 0.0;
     var appDocDir = await getTemporaryDirectory();
     String savePath = "${appDocDir.path}/appv${app.version}.apk";
 
-    await Dio().download(app.appUrl, savePath,
-        onReceiveProgress: (count, total) {
-      final value = count / total;
-      if (_progressValue != value) {
-        if (_progressValue < 1.0) {
-          _progressValue = count / total;
-        } else {
-          _progressValue = 0.0;
+    if (!_downloaded) {
+      final appv = await Dio().download(app.appUrl, savePath,
+          onReceiveProgress: (count, total) {
+        final value = count / total;
+        if (_progressValue != value) {
+          if (_progressValue < 1.0) {
+            _progressValue = count / total;
+          } else {
+            _progressValue = 0.0;
+          }
+          // print("${(_progressValue * 100).toStringAsFixed(0)}%");
+          notifyListeners();
         }
-        // print("${(_progressValue * 100).toStringAsFixed(0)}%");
-        notifyListeners();
+      });
+      if (appv.statusCode == 200) {
+        _downloaded = true;
       }
-    });
+    }
+
     var status = await Permission.requestInstallPackages.request();
     if (status.isGranted) {
       final res = await InstallPlugin.install(savePath);

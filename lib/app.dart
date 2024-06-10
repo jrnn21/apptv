@@ -9,8 +9,8 @@ import 'package:apptv02/providers/userProvider.dart';
 import 'package:apptv02/screens/download_screen.dart';
 import 'package:apptv02/screens/expire_screen.dart';
 import 'package:apptv02/screens/home_screen.dart';
+import 'package:apptv02/screens/loading_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:provider/provider.dart';
 
 class App extends StatefulWidget {
@@ -76,25 +76,7 @@ class _AppState extends State<App> {
                       : timeExpire.expireTime < timeExpire.correntTime
                           ? const ExpireScreen()
                           : const HomeScreen(),
-    );
-  }
-}
-
-class LoadingPage extends StatelessWidget {
-  const LoadingPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      backgroundColor: Colors.black,
-      body: Center(
-        child: SpinKitWaveSpinner(
-          color: Colors.white,
-          trackColor: Colors.blueAccent,
-          waveColor: Colors.blueAccent,
-          size: 80.0,
-        ),
-      ),
+      // home: ExpireScreen(),
     );
   }
 }

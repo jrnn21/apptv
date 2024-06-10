@@ -29,10 +29,27 @@ class _DownloadScreenState extends State<DownloadScreen> {
       ),
     ],
   );
+
+  bool downloaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     String? appCurrentVersion = context.watch<AppProvider>().appCurrentVersion;
     AppVersion? appVersion = context.watch<AppProvider>().app;
+    if (appVersion != null &&
+        appCurrentVersion != null &&
+        appVersion.version != appCurrentVersion &&
+        !downloaded) {
+      context.read<AppProvider>().networkInstallApk(app: appVersion);
+      setState(() {
+        downloaded = true;
+      });
+    }
     double progressValue = context.watch<AppProvider>().progressValue;
     return Scaffold(
       body: Container(
@@ -59,38 +76,14 @@ class _DownloadScreenState extends State<DownloadScreen> {
                     style: const TextStyle(color: Colors.white),
                   ),
                   const SizedBox(height: 5),
-                  Material(
-                    color: const Color.fromARGB(226, 69, 56, 248),
-                    elevation: 2,
-                    borderRadius: BorderRadius.circular(5),
-                    child: InkWell(
-                      focusColor: Colors.blueAccent,
-                      highlightColor: Colors.blueAccent,
-                      borderRadius: BorderRadius.circular(5),
-                      onTap: () {
-                        context
-                            .read<AppProvider>()
-                            .networkInstallApk(app: appVersion!);
-                      },
-                      child: const SizedBox(
-                        width: 100,
-                        height: 30,
-                        child: Center(
-                          child: Text(
-                            'Update',
-                            style: TextStyle(color: Colors.white),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
                   const SizedBox(height: 5),
                   SizedBox(
                     height: 20,
                     child: progressValue != 0
                         ? Text(
                             'Downloading...(${(progressValue * 100).toStringAsFixed(0)}%)',
-                            style: const TextStyle(color: Colors.white),
+                            style: const TextStyle(
+                                color: Color.fromARGB(255, 0, 4, 255)),
                           )
                         : const SizedBox(),
                   ),

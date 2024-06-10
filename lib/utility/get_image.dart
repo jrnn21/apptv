@@ -11,7 +11,7 @@ Future<File?> getCachedImage(String imageUrl) async {
       return null;
     }
   } catch (e) {
-    print('Error getting cached image: $e');
+    // print('Error getting cached image: $e');
     return null;
   }
 }
@@ -22,7 +22,7 @@ Future<File?> saveImageToCache(String imageUrl) async {
     File file = await cacheManager.getSingleFile(imageUrl);
     return file;
   } catch (e) {
-    print('Error saving image to cache: $e');
+    // print('Error saving image to cache: $e');
     return null;
   }
 }

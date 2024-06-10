@@ -1,5 +1,6 @@
 // ignore_for_file: deprecated_member_use, camel_case_types, unrelated_type_equality_checks
 
+import 'dart:async';
 import 'package:intl/intl.dart';
 import 'package:apptv02/providers/expire_provider.dart';
 import 'package:apptv02/utility/class.dart';
@@ -31,14 +32,16 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
 
   FocusNode focusNodePlayer = FocusNode();
   int selectIndex = 0;
-  bool showBanner = false;
+  bool showBanner = true;
   bool showPlaylist = false;
   bool showBottomPlayer = false;
   int bottomBTNselected = 7;
   bool play = true;
   BoxFit currentBoxFit = BoxFit.fill;
-  bool loadPlayer = false;
+  bool loadPlayer = true;
   String error = '';
+  Timer showBannerTimer =
+      Timer.periodic(const Duration(seconds: 3), (timer) {});
 
   @override
   void initState() {
@@ -49,7 +52,6 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
       axis: Axis.vertical,
     );
     init();
-
     image = CachedNetworkImage(
       filterQuality: FilterQuality.low,
       imageUrl: widget.playlists[0].logo.trim(),
@@ -67,6 +69,7 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
     controller.dispose();
     autoScrollController.dispose();
     focusNodePlayer.dispose();
+    showBannerTimer.cancel();
     Wakelock.disable();
     super.dispose();
   }
@@ -79,65 +82,46 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
         fit: currentBoxFit,
         allowedScreenSleep: false,
         controlsConfiguration: const BetterPlayerControlsConfiguration(
-          // showControlsOnInitialize: true,
           showControls: false,
         ),
       ),
     );
-
-    _play(widget.playlists[0].link.trim());
-
-    await autoScrollController.scrollToIndex(selectIndex,
-        // preferPosition: AutoScrollPosition.end,
-        duration: const Duration(milliseconds: 300));
-    autoScrollController.highlight(selectIndex);
-    controller.addEventsListener((event) {
-      setState(() {
-        loadPlayer = controller.isBuffering()!;
-      });
-
-      if (event.betterPlayerEventType == BetterPlayerEventType.finished &&
-          widget.playlists.length > selectIndex + 1) {
-        int nextId = selectIndex + 1;
-        setState(() {
-          selectIndex = nextId;
-        });
-        controller.setControlsVisibility(true);
-        controller.videoPlayerController
-            ?.setNetworkDataSource(widget.playlists[nextId].link);
-        controller.play();
-      }
-      if (event.betterPlayerEventType ==
-          BetterPlayerEventType.controlsVisible) {
-        setState(() {
-          showBanner = true;
-        });
-      } else if (event.betterPlayerEventType ==
-          BetterPlayerEventType.controlsHiddenEnd) {
-        setState(() {
-          showBanner = false;
-        });
-      }
-      if (event.betterPlayerEventType == BetterPlayerEventType.play) {
-        setState(() {
-          play = true;
-          error = '';
-        });
-      } else if (event.betterPlayerEventType == BetterPlayerEventType.pause) {
-        setState(() {
-          play = false;
-        });
-      }
-      if (event.betterPlayerEventType == BetterPlayerEventType.exception) {
-        setState(() {
-          error = 'Loading source...';
-        });
-        _play(widget.playlists[selectIndex].link.trim());
-      }
-    });
+    controller.setupDataSource(
+      BetterPlayerDataSource(
+        BetterPlayerDataSourceType.network,
+        widget.playlists[0].link.trim(),
+        bufferingConfiguration: const BetterPlayerBufferingConfiguration(
+          minBufferMs: 50000,
+          maxBufferMs: 100000,
+          // bufferForPlaybackMs: 1000,
+          // bufferForPlaybackAfterRebufferMs: 1000,
+        ),
+        videoFormat: widget.playlists[0].link.trim().contains('.m3u8')
+            ? BetterPlayerVideoFormat.hls
+            : BetterPlayerVideoFormat.other,
+      ),
+    );
+    controller.addEventsListener(_listener);
+    _showBottom();
   }
 
   _play(String url) {
+    setState(() {
+      loadPlayer = true;
+      error = '';
+    });
+    controller.clearCache();
+    controller.dispose();
+    controller = BetterPlayerController(
+      BetterPlayerConfiguration(
+        autoPlay: true,
+        aspectRatio: 16 / 9,
+        fit: currentBoxFit,
+        allowedScreenSleep: false,
+        controlsConfiguration: const BetterPlayerControlsConfiguration(
+            showControls: false, showControlsOnInitialize: true),
+      ),
+    );
     controller.setupDataSource(
       BetterPlayerDataSource(
         BetterPlayerDataSourceType.network,
@@ -148,12 +132,58 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
           // bufferForPlaybackMs: 1000,
           // bufferForPlaybackAfterRebufferMs: 1000,
         ),
-        videoFormat: url.split('.').last == 'm3u8'
+        videoFormat: url.contains('.m3u8')
             ? BetterPlayerVideoFormat.hls
             : BetterPlayerVideoFormat.other,
       ),
     );
-    controller.play();
+    // controller.play();
+    controller.addEventsListener(_listener);
+    setState(() {
+      showBanner = true;
+    });
+    _showBottom();
+  }
+
+  _showBottom() {
+    showBannerTimer.cancel();
+    showBannerTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
+      setState(() {
+        showBanner = false;
+      });
+    });
+  }
+
+  _listener(BetterPlayerEvent event) {
+    setState(() {
+      loadPlayer = controller.isBuffering()!;
+    });
+
+    if (event.betterPlayerEventType == BetterPlayerEventType.finished &&
+        widget.playlists.length > selectIndex + 1) {
+      int nextId = selectIndex + 1;
+      setState(() {
+        selectIndex = nextId;
+      });
+      controller.setControlsVisibility(true);
+      _play(widget.playlists[nextId].link.trim());
+    }
+
+    if (event.betterPlayerEventType == BetterPlayerEventType.play) {
+      setState(() {
+        error = '';
+        play = true;
+      });
+    } else if (event.betterPlayerEventType == BetterPlayerEventType.pause) {
+      setState(() {
+        play = false;
+      });
+    }
+    if (event.betterPlayerEventType == BetterPlayerEventType.exception) {
+      setState(() {
+        error = 'Link Server Error...';
+      });
+    }
   }
 
   void _changeBoxFit() {
@@ -480,8 +510,8 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
                   child: CircularProgressIndicator(color: Colors.white),
                 ),
               ),
-              Visibility(
-                visible: !showPlaylist && showBottomPlayer,
+              Opacity(
+                opacity: showBanner || showBottomPlayer ? 1 : 0,
                 child: Container(
                   height: 70,
                   padding: const EdgeInsets.all(5),
@@ -861,8 +891,8 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
                         showPlaylist ? 0 : -320, 0.0, 0.0),
                     width: 300,
                     decoration: BoxDecoration(
-                        color:
-                            const Color.fromARGB(195, 0, 0, 0).withOpacity(0.8),
+                        color: const Color.fromARGB(195, 43, 43, 43)
+                            .withOpacity(0.8),
                         borderRadius: BorderRadius.circular(10)),
                     child: SingleChildScrollView(
                       controller: autoScrollController,
@@ -900,12 +930,6 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
                                             // image,
                                             const SizedBox(
                                                 width: 10, height: 30),
-                                            Text(
-                                              '${i + 1}',
-                                              style: const TextStyle(
-                                                  color: Colors.white),
-                                            ),
-                                            const SizedBox(width: 10),
                                             Expanded(
                                               child: FittedBox(
                                                 alignment: Alignment.centerLeft,
