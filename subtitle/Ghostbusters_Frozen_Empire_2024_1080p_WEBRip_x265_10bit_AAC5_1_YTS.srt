@@ -1,13 +1,3 @@
-1
-00:00:02,000 --> 00:00:07,000
-Downloaded from
-YTS.MX
-
-2
-00:00:08,000 --> 00:00:13,000
-Official YIFY movies site:
-YTS.MX
-
 3
 00:01:35,617 --> 00:01:38,141
 -Hah! Hah!

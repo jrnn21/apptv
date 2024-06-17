@@ -99,8 +99,17 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
         videoFormat: widget.playlists[0].link.trim().contains('.m3u8')
             ? BetterPlayerVideoFormat.hls
             : BetterPlayerVideoFormat.other,
+        subtitles: [
+          BetterPlayerSubtitlesSource(
+              selectedByDefault: true,
+              type: BetterPlayerSubtitlesSourceType.network,
+              urls: [
+                'https://github.com/jrnn21/apptv/raw/main/subtitle/Ghostbusters_Frozen_Empire_2024_1080p_WEBRip_x265_10bit_AAC5_1_YTS.srt'
+              ])
+        ],
       ),
     );
+
     controller.addEventsListener(_listener);
     _showBottom();
   }
@@ -135,6 +144,13 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
         videoFormat: url.contains('.m3u8')
             ? BetterPlayerVideoFormat.hls
             : BetterPlayerVideoFormat.other,
+        subtitles: [
+          BetterPlayerSubtitlesSource(
+              type: BetterPlayerSubtitlesSourceType.network,
+              urls: [
+                'https://github.com/jrnn21/apptv/raw/main/subtitle/Ghostbusters_Frozen_Empire_2024_1080p_WEBRip_x265_10bit_AAC5_1_YTS.srt'
+              ])
+        ],
       ),
     );
     // controller.play();
