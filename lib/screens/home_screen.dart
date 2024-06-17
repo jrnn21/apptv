@@ -13,6 +13,7 @@ import 'package:apptv02/screens/movies_screen.dart';
 import 'package:apptv02/screens/series_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -219,17 +220,21 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         backgroundColor: Colors.black,
         body: Container(
           decoration: const BoxDecoration(
-              image: DecorationImage(
-                  image: AssetImage('images/BackgroundScreen.jpg'))),
+            image: DecorationImage(
+              image: AssetImage('images/BackgroundScreen.jpg'),
+              fit: BoxFit.fill,
+            ),
+          ),
           width: double.infinity,
           height: double.infinity,
           child: Stack(
             children: [
-              Positioned(
-                top: 160,
-                width: MediaQuery.of(context).size.width,
+              SizedBox(
+                width: double.infinity,
+                height: double.infinity,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     GestureDetector(
                       onTap: () async {
@@ -284,42 +289,16 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                             ? const Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  // AnimatedContainer(
-                                  //   height: 200,
-                                  //   duration:
-                                  //       const Duration(milliseconds: 200),
-                                  //   transform: Matrix4.diagonal3Values(
-                                  //       focusItem == 1 ? 1.2 : 1,
-                                  //       focusItem == 1 ? 1.2 : 1,
-                                  //       1),
-                                  //   transformAlignment: Alignment.center,
-                                  //   child: Column(
-                                  //     children: [
-                                  //       const SizedBox(height: 22),
-                                  //       Image.asset(
-                                  //         'images/TVicon2.png',
-                                  //         width: 110,
-                                  //       ),
-                                  //     ],
-                                  //   ),
-                                  // ),
-                                  // Image.asset(
-                                  //   'images/Group4.png',
-                                  //   width: 100,
-                                  // )
                                   Icon(
                                     Icons.live_tv_rounded,
                                     color: Colors.white,
                                     size: 100,
-                                    // shadows: shadowText,
                                   ),
                                   Text(
                                     'ប៉ុស្តិ៍ទូរទស្សន៍',
-                                    // style: style,
                                     style: TextStyle(
                                       color: Colors.white,
                                       fontSize: 18,
-                                      // fontWeight: FontWeight.bold,
                                       fontFamily: 'koulen',
                                     ),
                                   ),

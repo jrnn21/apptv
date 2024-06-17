@@ -8,6 +8,7 @@ import 'package:apptv02/providers/userProvider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 
 // class MyHttpOverrides extends HttpOverrides {
@@ -31,6 +32,10 @@ void main() async {
   SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(statusBarColor: Colors.transparent));
   // HttpOverrides.global = MyHttpOverrides();
+  // var status = await Permission.storage.request();
+  // if (status.isGranted) {
+  //   runApp(const MyApp());
+  // }
   runApp(const MyApp());
 }
 

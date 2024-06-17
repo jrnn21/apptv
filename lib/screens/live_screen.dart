@@ -113,6 +113,18 @@ class _LiveScreenState extends State<LiveScreen> {
     }
   }
 
+  void _reconnect() {
+    Future.delayed(const Duration(seconds: 5), () {
+      if (errorPlay.isNotEmpty) {
+        setState(() {
+          errorPlay = '';
+        });
+        controller.dispose();
+        _play(tv);
+      }
+    });
+  }
+
   _play(M3UItem m) {
     setState(() {
       loadPlayer = true;
@@ -128,6 +140,11 @@ class _LiveScreenState extends State<LiveScreen> {
           resolution =
               '${controller.value.size.width.toInt()}x${controller.value.size.height.toInt()}';
         });
+      }).catchError((error) {
+        setState(() {
+          errorPlay = 'Link Server Error!';
+        });
+        _reconnect();
       })
       ..addListener(() {
         _listener();
@@ -145,6 +162,7 @@ class _LiveScreenState extends State<LiveScreen> {
     if (controller.value.hasError) {
       errorPlay = 'Link Server Error!';
       eeee = controller.value.errorDescription!;
+      _reconnect();
     }
     if (controller.value.isCompleted) {
       controller.play();
@@ -564,17 +582,39 @@ class _LiveScreenState extends State<LiveScreen> {
                         ),
                       ),
                     ),
-                    Positioned(
-                      right: 20,
-                      bottom: 20,
-                      child: Text(
-                        eeee,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
+                    errorPlay.isNotEmpty
+                        ? const Positioned(
+                            right: 20,
+                            top: 20,
+                            child: Row(
+                              children: [
+                                SpinKitDualRing(
+                                  color: Colors.white,
+                                  size: 15.0,
+                                  lineWidth: 3,
+                                ),
+                                SizedBox(width: 10),
+                                Text(
+                                  'កំពុងភ្ជាប់...',
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                          )
+                        : const SizedBox(),
+                    // Positioned(
+                    //   right: 20,
+                    //   bottom: 20,
+                    //   child: Text(
+                    //     eeee,
+                    //     style: const TextStyle(
+                    //       color: Colors.white,
+                    //       fontWeight: FontWeight.bold,
+                    //     ),
+                    //   ),
+                    // ),
                     Visibility(
                       visible: errorPlay.isEmpty && loadPlayer,
                       child: const Center(
@@ -631,6 +671,9 @@ class _LiveScreenState extends State<LiveScreen> {
                           i,
                           GestureDetector(
                             onTap: () => setState(() {
+                              setState(() {
+                                show = false;
+                              });
                               gtSelected = gt[i].groupTitle;
                               selectedIndex = i;
                               autoScrollController.animateTo(i * 40,
@@ -642,8 +685,15 @@ class _LiveScreenState extends State<LiveScreen> {
                                   .toList();
                               currentPage = 0;
                               playlistPages = [];
-                              setState(() {});
+
                               loadNextPage();
+                              timerlist.cancel();
+                              timerlist =
+                                  Timer(const Duration(milliseconds: 350), () {
+                                setState(() {
+                                  show = true;
+                                });
+                              });
                             }),
                             child: AnimatedContainer(
                               duration: const Duration(milliseconds: 200),

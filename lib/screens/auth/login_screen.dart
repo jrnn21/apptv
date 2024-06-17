@@ -1,4 +1,4 @@
-// ignore_for_file: deprecated_member_use, constant_identifier_names, empty_catches, use_build_context_synchronously
+// ignore_for_file: deprecated_member_use, constant_identifier_names, empty_catches, use_build_context_synchronously, avoid_print
 
 import 'dart:ui';
 
@@ -11,6 +11,7 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:graphql/client.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 
 import '../../gql/user.dart';
@@ -49,6 +50,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     node.requestFocus();
+    _allowStorage();
     initPlatformState();
     super.initState();
   }
@@ -57,6 +59,13 @@ class _LoginScreenState extends State<LoginScreen> {
   void dispose() {
     node.dispose();
     super.dispose();
+  }
+
+  void _allowStorage() async {
+    var status = await Permission.storage.request();
+    if (status.isGranted) {
+      print('Allowed Storage!');
+    }
   }
 
   Future<void> initPlatformState() async {
@@ -323,107 +332,101 @@ class _LoginScreenState extends State<LoginScreen> {
                       const EdgeInsets.symmetric(vertical: 30, horizontal: 30),
                   clipBehavior: Clip.hardEdge,
                   decoration: const BoxDecoration(),
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(
-                      sigmaX: 10,
-                      sigmaY: 10,
-                    ),
-                    child: Column(
-                      children: [
-                        const Text(
-                          'បញ្ចូលលេខទូរស័ព្ទរបស់អ្នក',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontFamily: 'koulen',
-                            shadows: <Shadow>[
-                              Shadow(
-                                offset: Offset(1.0, 1.0),
-                                blurRadius: 3.0,
-                                color: Color.fromARGB(255, 0, 0, 0),
-                              ),
-                              Shadow(
-                                offset: Offset(1.0, 1.0),
-                                blurRadius: 8.0,
-                                color: Colors.black,
-                              ),
-                            ],
-                          ),
+                  child: Column(
+                    children: [
+                      const Text(
+                        'បញ្ចូលលេខទូរស័ព្ទរបស់អ្នក',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontFamily: 'koulen',
+                          shadows: <Shadow>[
+                            Shadow(
+                              offset: Offset(1.0, 1.0),
+                              blurRadius: 3.0,
+                              color: Color.fromARGB(255, 0, 0, 0),
+                            ),
+                            Shadow(
+                              offset: Offset(1.0, 1.0),
+                              blurRadius: 8.0,
+                              color: Colors.black,
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 10),
-                        Container(
-                          width: 200,
-                          padding: const EdgeInsets.symmetric(vertical: 6),
-                          margin: const EdgeInsets.all(3),
-                          decoration: BoxDecoration(
-                            color: const Color.fromARGB(197, 56, 48, 48),
-                            borderRadius: BorderRadius.circular(6),
-                            border:
-                                Border.all(color: Colors.blueAccent, width: 2),
-                          ),
-                          child: Row(
-                            children: [
-                              const SizedBox(width: 5),
-                              const Icon(
-                                Icons.phone_android,
-                                color: Colors.blueAccent,
-                              ),
-                              const SizedBox(width: 5),
-                              Expanded(
-                                  child: Text(
-                                _password,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                    color: Colors.blueAccent,
-                                    fontWeight: FontWeight.w900),
-                              )),
-                            ],
-                          ),
+                      ),
+                      const SizedBox(height: 10),
+                      Container(
+                        width: 200,
+                        padding: const EdgeInsets.symmetric(vertical: 6),
+                        margin: const EdgeInsets.all(3),
+                        decoration: BoxDecoration(
+                          color: const Color.fromARGB(197, 56, 48, 48),
+                          borderRadius: BorderRadius.circular(6),
+                          border:
+                              Border.all(color: Colors.blueAccent, width: 2),
                         ),
-                        const SizedBox(height: 10),
-                        SizedBox(
-                          width: 200,
-                          child: CustomKeyboard(
-                            select: select,
-                            onKeyPressed: (String key) {
-                              // Handle key presses
-                              if (key == 'backspace') {
-                                if (_password.isEmpty) return;
-                                _password = _password.substring(
-                                    0, _password.length - 1);
-                                setState(() {});
-                                return;
-                              }
-                              if (key == 'login') {
-                                _fetch();
-                                return;
-                              }
-                              _password = _password + key;
+                        child: Row(
+                          children: [
+                            const SizedBox(width: 5),
+                            const Icon(
+                              Icons.phone_android,
+                              color: Colors.blueAccent,
+                            ),
+                            const SizedBox(width: 5),
+                            Expanded(
+                                child: Text(
+                              _password,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                  color: Colors.blueAccent,
+                                  fontWeight: FontWeight.w900),
+                            )),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      SizedBox(
+                        width: 200,
+                        child: CustomKeyboard(
+                          select: select,
+                          onKeyPressed: (String key) {
+                            // Handle key presses
+                            if (key == 'backspace') {
+                              if (_password.isEmpty) return;
+                              _password =
+                                  _password.substring(0, _password.length - 1);
                               setState(() {});
-                            },
-                          ),
+                              return;
+                            }
+                            if (key == 'login') {
+                              _fetch();
+                              return;
+                            }
+                            _password = _password + key;
+                            setState(() {});
+                          },
                         ),
-                        Text(
-                          error,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            color: Color.fromRGBO(255, 53, 53, 1),
-                            shadows: <Shadow>[
-                              Shadow(
-                                offset: Offset(1.0, 1.0),
-                                blurRadius: 3.0,
-                                color: Color.fromARGB(255, 0, 0, 0),
-                              ),
-                              Shadow(
-                                offset: Offset(1.0, 1.0),
-                                blurRadius: 8.0,
-                                color: Colors.black,
-                              ),
-                            ],
-                          ),
-                        )
-                      ],
-                    ),
+                      ),
+                      Text(
+                        error,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Color.fromRGBO(255, 53, 53, 1),
+                          shadows: <Shadow>[
+                            Shadow(
+                              offset: Offset(1.0, 1.0),
+                              blurRadius: 3.0,
+                              color: Color.fromARGB(255, 0, 0, 0),
+                            ),
+                            Shadow(
+                              offset: Offset(1.0, 1.0),
+                              blurRadius: 8.0,
+                              color: Colors.black,
+                            ),
+                          ],
+                        ),
+                      )
+                    ],
                   ),
                 ),
               ),

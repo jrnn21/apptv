@@ -457,18 +457,19 @@ class _MoviesScreenState extends State<MoviesScreen> {
                     Container(
                       width: 15,
                       height: 50,
+                      padding: const EdgeInsets.only(left: 3),
                       decoration: const BoxDecoration(
                         color: Color.fromARGB(218, 0, 0, 0),
                         border: BorderDirectional(
                           bottom: BorderSide(
                               width: 2,
-                              color: Color.fromARGB(183, 255, 255, 255)),
+                              color: Color.fromARGB(82, 255, 255, 255)),
                           end: BorderSide(
                               width: 2,
-                              color: Color.fromARGB(183, 255, 255, 255)),
+                              color: Color.fromARGB(82, 255, 255, 255)),
                           top: BorderSide(
                               width: 2,
-                              color: Color.fromARGB(183, 255, 255, 255)),
+                              color: Color.fromARGB(82, 255, 255, 255)),
                         ),
                         borderRadius: BorderRadius.only(
                           topRight: Radius.circular(10),
@@ -477,8 +478,8 @@ class _MoviesScreenState extends State<MoviesScreen> {
                       ),
                       child: const Center(
                         child: Icon(
-                          Icons.arrow_forward_ios,
-                          color: Colors.white,
+                          Icons.arrow_back_ios,
+                          color: Color.fromARGB(143, 255, 255, 255),
                           size: 14,
                         ),
                       ),

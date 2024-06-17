@@ -486,12 +486,7 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
                   color: Colors.black,
                   width: MediaQuery.of(context).size.width,
                   child: Center(
-                    child: AspectRatio(
-                      aspectRatio: 16 / 9,
-                      child: BPlayer(controller: controller),
-                      // child:
-                      //  VlcPlayer(controller: controller, aspectRatio: 16 / 9),
-                    ),
+                    child: BPlayer(controller: controller),
                   ),
                 ),
               ),
