@@ -33,17 +33,25 @@ Future<List<M3USeriesItem>> parseM3uSeriesFromUrl({required String url}) async {
         int date = int.parse(splitResult[6]);
         String ep = splitResult[7];
         String link = splitResult[8].trim();
+        String subLink0 = splitResult.length > 9 ? splitResult[9].trim() : '';
+        String subLink1 = splitResult.length > 10 ? splitResult[10].trim() : '';
+        String subLink2 = splitResult.length > 11 ? splitResult[11].trim() : '';
         // Create M3USeriesItem object and add to playlistFilter list
 
-        playlist.add(M3USeriesItem(
-          title: title,
-          link: link,
-          groupTitle: groupTitle,
-          logo: logo,
-          ep: ep,
-          year: year,
-          date: date,
-        ));
+        playlist.add(
+          M3USeriesItem(
+            title: title,
+            link: link,
+            groupTitle: groupTitle,
+            logo: logo,
+            ep: ep,
+            year: year,
+            date: date,
+            subLink0: subLink0,
+            subLink1: subLink1,
+            subLink2: subLink2,
+          ),
+        );
       }
     }
     return playlist;

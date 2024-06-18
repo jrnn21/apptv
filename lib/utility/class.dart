@@ -14,6 +14,9 @@ class M3UItem {
 class M3USeriesItem {
   String title;
   String link;
+  String subLink0;
+  String subLink1;
+  String subLink2;
   String groupTitle;
   String logo;
   String ep;
@@ -22,6 +25,9 @@ class M3USeriesItem {
   M3USeriesItem({
     required this.title,
     required this.link,
+    required this.subLink0,
+    required this.subLink1,
+    required this.subLink2,
     required this.groupTitle,
     required this.logo,
     required this.ep,

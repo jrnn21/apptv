@@ -35,13 +35,16 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
   bool showBanner = true;
   bool showPlaylist = false;
   bool showBottomPlayer = false;
-  int bottomBTNselected = 7;
+  int bottomBTNselected = 3;
   bool play = true;
   BoxFit currentBoxFit = BoxFit.fill;
   bool loadPlayer = true;
   String error = '';
   Timer showBannerTimer =
       Timer.periodic(const Duration(seconds: 3), (timer) {});
+  bool showSub = false;
+  List<String> subList = [];
+  int selectSub = 0;
 
   @override
   void initState() {
@@ -84,6 +87,8 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
         controlsConfiguration: const BetterPlayerControlsConfiguration(
           showControls: false,
         ),
+        subtitlesConfiguration:
+            const BetterPlayerSubtitlesConfiguration(bottomPadding: 0),
       ),
     );
     controller.setupDataSource(
@@ -99,22 +104,15 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
         videoFormat: widget.playlists[0].link.trim().contains('.m3u8')
             ? BetterPlayerVideoFormat.hls
             : BetterPlayerVideoFormat.other,
-        subtitles: [
-          BetterPlayerSubtitlesSource(
-              selectedByDefault: true,
-              type: BetterPlayerSubtitlesSourceType.network,
-              urls: [
-                'https://github.com/jrnn21/apptv/raw/main/subtitle/Ghostbusters_Frozen_Empire_2024_1080p_WEBRip_x265_10bit_AAC5_1_YTS.srt'
-              ])
-        ],
       ),
     );
 
+    _addSubtitle(widget.playlists[0]);
     controller.addEventsListener(_listener);
     _showBottom();
   }
 
-  _play(String url) {
+  _play(M3USeriesItem m) {
     setState(() {
       loadPlayer = true;
       error = '';
@@ -128,37 +126,71 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
         fit: currentBoxFit,
         allowedScreenSleep: false,
         controlsConfiguration: const BetterPlayerControlsConfiguration(
-            showControls: false, showControlsOnInitialize: true),
+          showControls: false,
+        ),
+        subtitlesConfiguration:
+            const BetterPlayerSubtitlesConfiguration(bottomPadding: 0),
       ),
     );
     controller.setupDataSource(
       BetterPlayerDataSource(
         BetterPlayerDataSourceType.network,
-        url,
+        m.link.trim(),
         bufferingConfiguration: const BetterPlayerBufferingConfiguration(
           minBufferMs: 50000,
           maxBufferMs: 100000,
           // bufferForPlaybackMs: 1000,
           // bufferForPlaybackAfterRebufferMs: 1000,
         ),
-        videoFormat: url.contains('.m3u8')
+        videoFormat: m.link.trim().contains('.m3u8')
             ? BetterPlayerVideoFormat.hls
             : BetterPlayerVideoFormat.other,
-        subtitles: [
-          BetterPlayerSubtitlesSource(
-              type: BetterPlayerSubtitlesSourceType.network,
-              urls: [
-                'https://github.com/jrnn21/apptv/raw/main/subtitle/Ghostbusters_Frozen_Empire_2024_1080p_WEBRip_x265_10bit_AAC5_1_YTS.srt'
-              ])
-        ],
       ),
     );
-    // controller.play();
+    _addSubtitle(m);
     controller.addEventsListener(_listener);
     setState(() {
       showBanner = true;
     });
+
     _showBottom();
+  }
+
+  void _addSubtitle(M3USeriesItem m) {
+    subList = [];
+    selectSub = 0;
+
+    if (m.subLink0 != '') {
+      subList.add(m.subLink0);
+    }
+    if (m.subLink1 != '') {
+      subList.add(m.subLink1);
+    }
+    if (m.subLink2 != '') {
+      subList.add(m.subLink2);
+    }
+    subList.add('None---None');
+    setState(() {});
+    initSub(subList[0].toString());
+    return;
+  }
+
+  void initSub(String subString) {
+    String subS = subString.split('---')[0];
+    if (subS == 'None') {
+      controller.setupSubtitleSource(
+        BetterPlayerSubtitlesSource(
+          type: BetterPlayerSubtitlesSourceType.none,
+        ),
+      );
+      return;
+    }
+    controller.setupSubtitleSource(
+      BetterPlayerSubtitlesSource(
+        type: BetterPlayerSubtitlesSourceType.network,
+        urls: [subS],
+      ),
+    );
   }
 
   _showBottom() {
@@ -182,7 +214,7 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
         selectIndex = nextId;
       });
       controller.setControlsVisibility(true);
-      _play(widget.playlists[nextId].link.trim());
+      _play(widget.playlists[nextId]);
     }
 
     if (event.betterPlayerEventType == BetterPlayerEventType.play) {
@@ -246,16 +278,37 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
           autoScrollController.highlight(i);
           break;
         case LogicalKeyboardKey.select:
-          _play(widget.playlists[selectIndex].link.trim());
+          _play(widget.playlists[selectIndex]);
           break;
         case LogicalKeyboardKey.enter:
-          _play(widget.playlists[selectIndex].link.trim());
+          _play(widget.playlists[selectIndex]);
+          break;
+        default:
+      }
+    } else if (event is RawKeyDownEvent && showSub) {
+      int i = 0;
+      switch (event.logicalKey) {
+        case LogicalKeyboardKey.arrowDown:
+          i = (selectSub + 1).clamp(0, subList.length - 1);
+          selectSub = i;
+          setState(() {});
+          break;
+        case LogicalKeyboardKey.arrowUp:
+          i = (selectSub - 1).clamp(0, subList.length - 1);
+          selectSub = i;
+          setState(() {});
+          break;
+        case LogicalKeyboardKey.select || LogicalKeyboardKey.enter:
+          initSub(subList[selectSub]);
+          setState(() {
+            showSub = false;
+          });
           break;
         default:
       }
     } else if (event is RawKeyDownEvent && showBottomPlayer) {
       int i = 0;
-      if (bottomBTNselected == 7) {
+      if (bottomBTNselected == 8) {
         switch (event.logicalKey) {
           case LogicalKeyboardKey.arrowDown:
             i = 3;
@@ -274,25 +327,27 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
       } else {
         switch (event.logicalKey) {
           case LogicalKeyboardKey.arrowUp:
-            i = 7;
+            i = 8;
             setState(() {
               bottomBTNselected = i;
             });
             break;
 
           case LogicalKeyboardKey.arrowRight:
-            i = (bottomBTNselected + 1).clamp(0, 6);
+            i = (bottomBTNselected + 1).clamp(0, 7);
             setState(() {
               bottomBTNselected = i;
             });
+
             break;
           case LogicalKeyboardKey.arrowLeft:
-            i = (bottomBTNselected - 1).clamp(0, 6);
+            i = (bottomBTNselected - 1).clamp(0, 7);
             setState(() {
               bottomBTNselected = i;
             });
+
             break;
-          case LogicalKeyboardKey.enter:
+          case LogicalKeyboardKey.select || LogicalKeyboardKey.enter:
             switch (bottomBTNselected) {
               case 0:
                 setState(() {
@@ -312,7 +367,7 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
                     selectIndex = prewId;
                   });
                   controller.setControlsVisibility(true);
-                  _play(widget.playlists[prewId].link.trim());
+                  _play(widget.playlists[prewId]);
                 }
                 break;
               case 2:
@@ -341,76 +396,16 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
                     selectIndex = nextId;
                   });
                   controller.setControlsVisibility(true);
-                  _play(widget.playlists[nextId].link.trim());
+                  _play(widget.playlists[nextId]);
                 }
                 break;
               case 6:
-                if (currentBoxFit == BoxFit.contain) {
-                  setState(() {
-                    currentBoxFit = BoxFit.fill;
-                  });
-                } else if (currentBoxFit == BoxFit.fill) {
-                  setState(() {
-                    currentBoxFit = BoxFit.contain;
-                  });
-                }
-                _changeBoxFit();
-              default:
-            }
-            break;
-          case LogicalKeyboardKey.select:
-            switch (bottomBTNselected) {
-              case 0:
                 setState(() {
-                  showBottomPlayer = false;
-                  showPlaylist = true;
-                  bottomBTNselected = 3;
+                  showSub = !showSub;
                 });
-                await autoScrollController.scrollToIndex(selectIndex,
-                    preferPosition: AutoScrollPosition.middle,
-                    duration: const Duration(milliseconds: 300));
-                autoScrollController.highlight(selectIndex);
+
                 break;
-              case 1:
-                if (selectIndex > 0) {
-                  int prewId = selectIndex - 1;
-                  setState(() {
-                    selectIndex = prewId;
-                  });
-                  controller.setControlsVisibility(true);
-                  _play(widget.playlists[prewId].link.trim());
-                }
-                break;
-              case 2:
-                _seekBackward(const Duration(seconds: 10));
-                break;
-              case 3:
-                if (play) {
-                  controller.videoPlayerController!.pause();
-                  setState(() {
-                    play = false;
-                  });
-                } else {
-                  controller.videoPlayerController!.play();
-                  setState(() {
-                    play = true;
-                  });
-                }
-                break;
-              case 4:
-                _seekForward(const Duration(seconds: 10));
-                break;
-              case 5:
-                if (widget.playlists.length > selectIndex + 1) {
-                  int nextId = selectIndex + 1;
-                  setState(() {
-                    selectIndex = nextId;
-                  });
-                  controller.setControlsVisibility(true);
-                  _play(widget.playlists[nextId].link.trim());
-                }
-                break;
-              case 6:
+              case 7:
                 if (currentBoxFit == BoxFit.contain) {
                   setState(() {
                     currentBoxFit = BoxFit.fill;
@@ -471,6 +466,13 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
     }
     return WillPopScope(
       onWillPop: () async {
+        if (showSub) {
+          setState(() {
+            showSub = false;
+            showBottomPlayer = false;
+          });
+          return false;
+        }
         if (showPlaylist) {
           setState(() {
             showPlaylist = false;
@@ -494,8 +496,13 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
             children: [
               GestureDetector(
                 onTap: () {
+                  if (showPlaylist) {
+                    showPlaylist = false;
+                    return;
+                  }
                   setState(() {
                     showBottomPlayer = !showBottomPlayer;
+                    showSub = false;
                   });
                 },
                 child: Container(
@@ -550,6 +557,158 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
                   ),
                 ),
               ),
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                clipBehavior: Clip.hardEdge,
+                margin: const EdgeInsets.all(8),
+                transform: Matrix4.translationValues(
+                    showPlaylist ? 0 : -320, 0.0, 0.0),
+                width: 300,
+                height: double.infinity,
+                decoration: BoxDecoration(
+                    color:
+                        const Color.fromARGB(195, 43, 43, 43).withOpacity(0.8),
+                    borderRadius: BorderRadius.circular(10)),
+                child: SingleChildScrollView(
+                  controller: autoScrollController,
+                  child: Column(
+                    children: [
+                      ...widget.playlists.asMap().map((i, e) {
+                        return MapEntry(
+                          i,
+                          ClipRect(
+                            child: Material(
+                              color: Colors.transparent,
+                              child: GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    selectIndex = i;
+                                  });
+                                  _play(e);
+                                },
+                                child: AutoScrollTag(
+                                  key: ValueKey(i),
+                                  controller: autoScrollController,
+                                  index: i,
+                                  child: Container(
+                                    color: selectIndex == i
+                                        ? Colors.blueAccent
+                                        : Colors.transparent,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 5,
+                                    ),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
+                                      children: [
+                                        // image,
+                                        const SizedBox(width: 10, height: 30),
+                                        Expanded(
+                                          child: FittedBox(
+                                            alignment: Alignment.centerLeft,
+                                            fit: BoxFit.scaleDown,
+                                            child: Text(
+                                              '${e.title} ${e.ep}',
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ),
+                                        )
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      }).values
+                    ],
+                  ),
+                ),
+              ),
+              Positioned(
+                right: 0,
+                bottom: 80,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  clipBehavior: Clip.hardEdge,
+                  margin: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.symmetric(vertical: 5),
+                  transform:
+                      Matrix4.translationValues(showSub ? 0 : 200, 0.0, 0.0),
+                  width: 150,
+                  decoration: BoxDecoration(
+                      color: const Color.fromARGB(195, 43, 43, 43)
+                          .withOpacity(0.8),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Colors.white24)),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ...subList.asMap().map((i, e) {
+                        return MapEntry(
+                          i,
+                          GestureDetector(
+                            onTap: () {
+                              initSub(e.toString());
+                              setState(() {
+                                selectSub = i;
+                                showSub = false;
+                              });
+                            },
+                            child: Material(
+                              color: Colors.transparent,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 5,
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Expanded(
+                                      child: FittedBox(
+                                        alignment: Alignment.centerLeft,
+                                        fit: BoxFit.scaleDown,
+                                        child: Text(
+                                          e.split('---')[1],
+                                          style: TextStyle(
+                                              color: selectSub == i
+                                                  ? Colors.blueAccent
+                                                  : Colors.white,
+                                              fontWeight: selectSub == i
+                                                  ? FontWeight.w900
+                                                  : FontWeight.normal),
+                                        ),
+                                      ),
+                                    ),
+                                    Icon(
+                                      Icons.check,
+                                      size: 16,
+                                      weight: 4,
+                                      color: selectSub == i
+                                          ? Colors.blueAccent
+                                          : Colors.transparent,
+                                    )
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      }).values
+                    ],
+                  ),
+                ),
+              ),
               // bottom play widget
               Visibility(
                 visible: showBottomPlayer && !showPlaylist,
@@ -581,7 +740,7 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
                                   children: [
                                     SliderTheme(
                                       data: SliderTheme.of(context).copyWith(
-                                        activeTrackColor: bottomBTNselected == 7
+                                        activeTrackColor: bottomBTNselected == 8
                                             ? Colors.blue[900]
                                             : Colors.red,
                                         inactiveTrackColor:
@@ -844,6 +1003,35 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
                                       elevation: 1,
                                       color: bottomBTNselected == 6
                                           ? Colors.blue[900]
+                                          : Colors.black87,
+                                      child: ClipRRect(
+                                        child: InkWell(
+                                          borderRadius:
+                                              BorderRadius.circular(100),
+                                          onTap: () {
+                                            setState(() {
+                                              showSub = !showSub;
+                                            });
+                                          },
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(
+                                                vertical: 2, horizontal: 6),
+                                            child: const Text(
+                                              'C',
+                                              style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontWeight: FontWeight.bold),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Material(
+                                      borderRadius: BorderRadius.circular(100),
+                                      elevation: 1,
+                                      color: bottomBTNselected == 7
+                                          ? Colors.blue[900]
                                           : currentBoxFit == BoxFit.fill
                                               ? Colors.white
                                               : Colors.black87,
@@ -892,83 +1080,6 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
                   ),
                 ),
               ),
-              Row(
-                children: [
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 300),
-                    clipBehavior: Clip.hardEdge,
-                    margin: const EdgeInsets.all(8),
-                    transform: Matrix4.translationValues(
-                        showPlaylist ? 0 : -320, 0.0, 0.0),
-                    width: 300,
-                    decoration: BoxDecoration(
-                        color: const Color.fromARGB(195, 43, 43, 43)
-                            .withOpacity(0.8),
-                        borderRadius: BorderRadius.circular(10)),
-                    child: SingleChildScrollView(
-                      controller: autoScrollController,
-                      child: Column(
-                        children: [
-                          ...widget.playlists.asMap().map((i, e) {
-                            return MapEntry(
-                              i,
-                              ClipRect(
-                                child: Material(
-                                  color: Colors.transparent,
-                                  child: GestureDetector(
-                                    onTap: () {
-                                      setState(() {
-                                        selectIndex = i;
-                                      });
-                                      _play(e.link.trim());
-                                    },
-                                    child: AutoScrollTag(
-                                      key: ValueKey(i),
-                                      controller: autoScrollController,
-                                      index: i,
-                                      child: Container(
-                                        color: selectIndex == i
-                                            ? Colors.blueAccent
-                                            : Colors.transparent,
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 10, vertical: 5),
-                                        child: Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.start,
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.center,
-                                          children: [
-                                            // image,
-                                            const SizedBox(
-                                                width: 10, height: 30),
-                                            Expanded(
-                                              child: FittedBox(
-                                                alignment: Alignment.centerLeft,
-                                                fit: BoxFit.scaleDown,
-                                                child: Text(
-                                                  '${e.title} ${e.ep}',
-                                                  style: const TextStyle(
-                                                    color: Colors.white,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                ),
-                                              ),
-                                            )
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            );
-                          }).values
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              )
             ],
           ),
         ),
