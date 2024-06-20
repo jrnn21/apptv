@@ -42,9 +42,12 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
   String error = '';
   Timer showBannerTimer =
       Timer.periodic(const Duration(seconds: 3), (timer) {});
+  Timer showPlayerTimer =
+      Timer.periodic(const Duration(seconds: 5), (timer) {});
   bool showSub = false;
   List<String> subList = [];
   int selectSub = 0;
+  late M3USeriesItem tv;
 
   @override
   void initState() {
@@ -73,11 +76,13 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
     autoScrollController.dispose();
     focusNodePlayer.dispose();
     showBannerTimer.cancel();
+    showPlayerTimer.cancel();
     Wakelock.disable();
     super.dispose();
   }
 
   init() async {
+    tv = widget.playlists[0];
     controller = BetterPlayerController(
       BetterPlayerConfiguration(
         autoPlay: true,
@@ -94,7 +99,7 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
     controller.setupDataSource(
       BetterPlayerDataSource(
         BetterPlayerDataSourceType.network,
-        widget.playlists[0].link.trim(),
+        tv.link.trim(),
         bufferingConfiguration: const BetterPlayerBufferingConfiguration(
           minBufferMs: 50000,
           maxBufferMs: 100000,
@@ -114,8 +119,15 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
 
   _play(M3USeriesItem m) {
     setState(() {
-      loadPlayer = true;
       error = '';
+      showPlaylist = false;
+    });
+    if (m == tv) {
+      return;
+    }
+    setState(() {
+      tv = m;
+      loadPlayer = true;
     });
     controller.clearCache();
     controller.dispose();
@@ -127,6 +139,7 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
         allowedScreenSleep: false,
         controlsConfiguration: const BetterPlayerControlsConfiguration(
           showControls: false,
+          showControlsOnInitialize: true,
         ),
         subtitlesConfiguration:
             const BetterPlayerSubtitlesConfiguration(bottomPadding: 0),
@@ -152,7 +165,6 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
     setState(() {
       showBanner = true;
     });
-
     _showBottom();
   }
 
@@ -169,7 +181,7 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
     if (m.subLink2 != '') {
       subList.add(m.subLink2);
     }
-    subList.add('None---None');
+    subList.add('None---🚫 None');
     setState(() {});
     initSub(subList[0].toString());
     return;
@@ -252,7 +264,18 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
     controller.seekTo(newPosition);
   }
 
+  void hidePlayerButton() {
+    showPlayerTimer.cancel();
+    showPlayerTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+      setState(() {
+        showBottomPlayer = false;
+        showSub = false;
+      });
+    });
+  }
+
   void _handleKeyPress(RawKeyEvent event) async {
+    hidePlayerButton();
     // playlist
     if (event is RawKeyDownEvent && showPlaylist) {
       int i = 0;
@@ -500,15 +523,16 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
                     showPlaylist = false;
                     return;
                   }
+                  hidePlayerButton();
                   setState(() {
                     showBottomPlayer = !showBottomPlayer;
                     showSub = false;
                   });
                 },
-                child: Container(
-                  color: Colors.black,
-                  width: MediaQuery.of(context).size.width,
-                  child: Center(
+                child: Center(
+                  child: Container(
+                    color: Colors.black,
+                    width: MediaQuery.of(context).size.width,
                     child: BPlayer(controller: controller),
                   ),
                 ),
@@ -741,8 +765,8 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
                                     SliderTheme(
                                       data: SliderTheme.of(context).copyWith(
                                         activeTrackColor: bottomBTNselected == 8
-                                            ? Colors.blue[900]
-                                            : Colors.red,
+                                            ? Colors.red
+                                            : Colors.blue[900],
                                         inactiveTrackColor:
                                             const Color.fromARGB(
                                                 125, 158, 158, 158),
@@ -810,15 +834,13 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
                                 children: [
                                   const SizedBox(width: 10),
                                   Material(
-                                    borderRadius: BorderRadius.circular(100),
-                                    elevation: 1,
+                                    borderRadius: BorderRadius.circular(5),
                                     color: bottomBTNselected == 0
-                                        ? Colors.blue[900]
-                                        : Colors.black87,
+                                        ? Colors.red
+                                        : Colors.transparent,
                                     child: ClipRRect(
                                       child: InkWell(
-                                        borderRadius:
-                                            BorderRadius.circular(100),
+                                        borderRadius: BorderRadius.circular(5),
                                         onTap: () async {
                                           setState(() {
                                             showBottomPlayer = false;
@@ -837,11 +859,11 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
                                               .highlight(selectIndex);
                                         },
                                         child: Container(
-                                          padding: const EdgeInsets.all(2),
-                                          child: const Icon(
-                                            Icons.list_outlined,
-                                            color: Colors.white,
-                                            size: 15,
+                                          padding: const EdgeInsets.symmetric(
+                                              vertical: 2, horizontal: 2),
+                                          child: Image.asset(
+                                            'images/list.png',
+                                            width: 17,
                                           ),
                                         ),
                                       ),
@@ -859,8 +881,8 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
                                       borderRadius: BorderRadius.circular(100),
                                       elevation: 1,
                                       color: bottomBTNselected == 1
-                                          ? Colors.blue[900]
-                                          : Colors.black87,
+                                          ? Colors.red
+                                          : Colors.blue[900],
                                       child: ClipRRect(
                                         child: InkWell(
                                           borderRadius:
@@ -882,8 +904,8 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
                                       borderRadius: BorderRadius.circular(100),
                                       elevation: 1,
                                       color: bottomBTNselected == 2
-                                          ? Colors.blue[900]
-                                          : Colors.black87,
+                                          ? Colors.red
+                                          : Colors.blue[900],
                                       child: ClipRRect(
                                         child: InkWell(
                                           borderRadius:
@@ -908,8 +930,8 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
                                       borderRadius: BorderRadius.circular(100),
                                       elevation: 1,
                                       color: bottomBTNselected == 3
-                                          ? Colors.blue[900]
-                                          : Colors.black87,
+                                          ? Colors.red
+                                          : Colors.blue[900],
                                       child: ClipRRect(
                                         child: InkWell(
                                           borderRadius:
@@ -947,8 +969,8 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
                                       borderRadius: BorderRadius.circular(100),
                                       elevation: 1,
                                       color: bottomBTNselected == 4
-                                          ? Colors.blue[900]
-                                          : Colors.black87,
+                                          ? Colors.red
+                                          : Colors.blue[900],
                                       child: ClipRRect(
                                         child: InkWell(
                                           borderRadius:
@@ -973,8 +995,8 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
                                       borderRadius: BorderRadius.circular(100),
                                       elevation: 1,
                                       color: bottomBTNselected == 5
-                                          ? Colors.blue[900]
-                                          : Colors.black87,
+                                          ? Colors.red
+                                          : Colors.blue[900],
                                       child: ClipRRect(
                                         child: InkWell(
                                           borderRadius:
@@ -999,15 +1021,14 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
                                   mainAxisAlignment: MainAxisAlignment.end,
                                   children: [
                                     Material(
-                                      borderRadius: BorderRadius.circular(100),
-                                      elevation: 1,
+                                      borderRadius: BorderRadius.circular(5),
                                       color: bottomBTNselected == 6
-                                          ? Colors.blue[900]
-                                          : Colors.black87,
+                                          ? Colors.red
+                                          : Colors.transparent,
                                       child: ClipRRect(
                                         child: InkWell(
                                           borderRadius:
-                                              BorderRadius.circular(100),
+                                              BorderRadius.circular(5),
                                           onTap: () {
                                             setState(() {
                                               showSub = !showSub;
@@ -1015,12 +1036,10 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
                                           },
                                           child: Container(
                                             padding: const EdgeInsets.symmetric(
-                                                vertical: 2, horizontal: 6),
-                                            child: const Text(
-                                              'C',
-                                              style: TextStyle(
-                                                  color: Colors.white,
-                                                  fontWeight: FontWeight.bold),
+                                                vertical: 2, horizontal: 2),
+                                            child: Image.asset(
+                                              'images/cc.png',
+                                              width: 18,
                                             ),
                                           ),
                                         ),
@@ -1028,17 +1047,14 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
                                     ),
                                     const SizedBox(width: 10),
                                     Material(
-                                      borderRadius: BorderRadius.circular(100),
-                                      elevation: 1,
+                                      borderRadius: BorderRadius.circular(5),
                                       color: bottomBTNselected == 7
-                                          ? Colors.blue[900]
-                                          : currentBoxFit == BoxFit.fill
-                                              ? Colors.white
-                                              : Colors.black87,
+                                          ? Colors.red
+                                          : Colors.transparent,
                                       child: ClipRRect(
                                         child: InkWell(
                                           borderRadius:
-                                              BorderRadius.circular(100),
+                                              BorderRadius.circular(5),
                                           onTap: () {
                                             if (currentBoxFit ==
                                                 BoxFit.contain) {
@@ -1054,15 +1070,17 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
                                             _changeBoxFit();
                                           },
                                           child: Container(
-                                            padding: const EdgeInsets.all(2),
-                                            child: Icon(
-                                              Icons.screenshot_monitor_rounded,
-                                              color:
-                                                  currentBoxFit == BoxFit.fill
-                                                      ? Colors.black87
-                                                      : Colors.white,
-                                              size: 15,
-                                            ),
+                                            padding: const EdgeInsets.symmetric(
+                                                vertical: 2, horizontal: 2),
+                                            child: currentBoxFit == BoxFit.fill
+                                                ? Image.asset(
+                                                    'images/fullscreen.png',
+                                                    width: 18,
+                                                  )
+                                                : Image.asset(
+                                                    'images/originalSize.png',
+                                                    width: 18,
+                                                  ),
                                           ),
                                         ),
                                       ),

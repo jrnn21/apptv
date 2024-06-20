@@ -56,6 +56,8 @@ class _LiveScreenState extends State<LiveScreen> {
   String fps = "Unknown";
   bool showTvDetail = true;
   Timer showTvDetailTimer = Timer(const Duration(milliseconds: 5000), () {});
+  Timer showTvListTimer =
+      Timer.periodic(const Duration(seconds: 10), (timer) {});
   String eeee = 'Unknown';
 
   @override
@@ -74,6 +76,7 @@ class _LiveScreenState extends State<LiveScreen> {
     autoTvScrollController.dispose();
     focusNodePlayer.dispose();
     timerlist.cancel();
+    showTvListTimer.cancel();
     Wakelock.disable();
     super.dispose();
   }
@@ -97,6 +100,7 @@ class _LiveScreenState extends State<LiveScreen> {
         controller
           ..initialize().then((_) async {
             controller.play();
+
             setState(() {
               resolution =
                   '${controller.value.size.width.toInt()}x${controller.value.size.height.toInt()}';
@@ -105,12 +109,23 @@ class _LiveScreenState extends State<LiveScreen> {
           ..addListener(() {
             _listener();
           });
+        hidePlayerButton();
       });
 
       return [];
     } catch (e) {
       return [];
     }
+  }
+
+  void hidePlayerButton() {
+    showTvListTimer.cancel();
+    showTvListTimer = Timer.periodic(const Duration(seconds: 10), (timer) {
+      setState(() {
+        selectedTv = false;
+        showPlaylist = false;
+      });
+    });
   }
 
   void _reconnect() {
@@ -214,6 +229,7 @@ class _LiveScreenState extends State<LiveScreen> {
   }
 
   void handlePressOnPlayer(RawKeyEvent event) async {
+    hidePlayerButton();
     if (event is RawKeyDownEvent) {
       switch (showPlaylist) {
         case true:

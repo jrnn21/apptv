@@ -86,6 +86,9 @@ class AppProvider extends ChangeNotifier {
       print(
           "install apk ${res['isSuccess'] == true ? 'success' : 'fail:${res['errorMessage'] ?? ''}'}");
     } else {
+      final res = await InstallPlugin.install(savePath);
+      print(
+          "install apk ${res['isSuccess'] == true ? 'success' : 'fail:${res['errorMessage'] ?? ''}'}");
       _progressValue = 0.0;
       notifyListeners();
     }

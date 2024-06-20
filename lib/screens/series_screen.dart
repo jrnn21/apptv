@@ -445,36 +445,41 @@ class _SeriesScreenState extends State<SeriesScreen> {
                         ),
                       ),
                     ),
-                    Container(
-                      width: 15,
-                      height: 50,
-                      padding: const EdgeInsets.only(left: 3),
-                      decoration: const BoxDecoration(
-                        color: Color.fromARGB(218, 0, 0, 0),
-                        border: BorderDirectional(
-                          bottom: BorderSide(
-                              width: 2,
-                              color: Color.fromARGB(82, 255, 255, 255)),
-                          end: BorderSide(
-                              width: 2,
-                              color: Color.fromARGB(82, 255, 255, 255)),
-                          top: BorderSide(
-                              width: 2,
-                              color: Color.fromARGB(82, 255, 255, 255)),
-                        ),
-                        borderRadius: BorderRadius.only(
-                          topRight: Radius.circular(10),
-                          bottomRight: Radius.circular(10),
-                        ),
-                      ),
-                      child: const Center(
-                        child: Icon(
-                          Icons.arrow_back_ios,
-                          color: Color.fromARGB(143, 255, 255, 255),
-                          size: 14,
-                        ),
-                      ),
-                    )
+                    !showCate
+                        ? Container(
+                            width: 15,
+                            height: 50,
+                            padding: const EdgeInsets.only(left: 3),
+                            decoration: BoxDecoration(
+                              color: const Color.fromARGB(218, 0, 0, 0),
+                              border: BorderDirectional(
+                                bottom: BorderSide(
+                                    width: 2,
+                                    color: Colors.blueAccent.withOpacity(0.5)),
+                                end: BorderSide(
+                                    width: 2,
+                                    color: Colors.blueAccent.withOpacity(0.5)),
+                                top: BorderSide(
+                                    width: 2,
+                                    color: Colors.blueAccent.withOpacity(0.5)),
+                              ),
+                              borderRadius: const BorderRadius.only(
+                                topRight: Radius.circular(10),
+                                bottomRight: Radius.circular(10),
+                              ),
+                            ),
+                            child: Container(
+                              transform:
+                                  Matrix4.translationValues(-8, 0.0, 0.0),
+                              child: const Icon(
+                                // Icons.arrow_back_ios,
+                                Icons.menu_open_sharp,
+                                color: Colors.blueAccent,
+                                size: 18,
+                              ),
+                            ),
+                          )
+                        : const SizedBox.shrink()
                   ],
                 ),
               ),
