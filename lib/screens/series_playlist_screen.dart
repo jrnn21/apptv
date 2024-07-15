@@ -43,7 +43,7 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
   Timer showBannerTimer =
       Timer.periodic(const Duration(seconds: 3), (timer) {});
   Timer showPlayerTimer =
-      Timer.periodic(const Duration(seconds: 5), (timer) {});
+      Timer.periodic(const Duration(seconds: 10), (timer) {});
   bool showSub = false;
   List<String> subList = [];
   int selectSub = 0;
@@ -114,7 +114,7 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
 
     _addSubtitle(widget.playlists[0]);
     controller.addEventsListener(_listener);
-    _showBottom();
+    _showBanner();
   }
 
   _play(M3USeriesItem m) {
@@ -165,7 +165,7 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
     setState(() {
       showBanner = true;
     });
-    _showBottom();
+    _showBanner();
   }
 
   void _addSubtitle(M3USeriesItem m) {
@@ -205,7 +205,7 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
     );
   }
 
-  _showBottom() {
+  _showBanner() {
     showBannerTimer.cancel();
     showBannerTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
       setState(() {
@@ -266,10 +266,11 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
 
   void hidePlayerButton() {
     showPlayerTimer.cancel();
-    showPlayerTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+    showPlayerTimer = Timer.periodic(const Duration(seconds: 10), (timer) {
       setState(() {
         showBottomPlayer = false;
         showSub = false;
+        showPlaylist = false;
       });
     });
   }

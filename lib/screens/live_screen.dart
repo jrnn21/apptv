@@ -495,6 +495,7 @@ class _LiveScreenState extends State<LiveScreen> {
                   children: [
                     GestureDetector(
                       onTap: () async {
+                        hidePlayerButton();
                         setState(() {
                           selectedIndex = selectedIndexPlay;
                           selectedIndexTv = selectedIndexTvPlayed;

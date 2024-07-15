@@ -1,4 +1,5 @@
 // ignore_for_file: empty_catches, deprecated_member_use
+import 'dart:async';
 import 'dart:ui';
 import 'package:apptv02/providers/series_provider.dart';
 import 'package:apptv02/screens/series_playlist_screen.dart';
@@ -31,6 +32,7 @@ class _SeriesScreenState extends State<SeriesScreen> {
   FocusNode focusNode = FocusScopeNode();
   int selectCate = -1;
   int selectMovie = 0;
+  Timer showCateTimer = Timer.periodic(const Duration(seconds: 10), (timer) {});
 
   TextStyle styleGT = const TextStyle(
       color: Colors.white,
@@ -62,6 +64,7 @@ class _SeriesScreenState extends State<SeriesScreen> {
     playlistScrollController.removeListener(_onScroll);
     playlistScrollController.dispose();
     focusNode.dispose();
+    showCateTimer.cancel();
     super.dispose();
   }
 
@@ -71,6 +74,16 @@ class _SeriesScreenState extends State<SeriesScreen> {
     playlist = context.read<SeriesProvider>().playlist;
     playlistFilter = context.read<SeriesProvider>().playlistFilter;
     loadNextPage();
+    hideCategoryList();
+  }
+
+  void hideCategoryList() {
+    showCateTimer.cancel();
+    showCateTimer = Timer.periodic(const Duration(seconds: 10), (timer) {
+      setState(() {
+        showCate = false;
+      });
+    });
   }
 
   void loadNextPage() {
@@ -98,6 +111,7 @@ class _SeriesScreenState extends State<SeriesScreen> {
   }
 
   void onKeyEvent(RawKeyEvent event) {
+    hideCategoryList();
     if (event is RawKeyDownEvent) {
       if (showCate == true) {
         handlePressOnCate(event);

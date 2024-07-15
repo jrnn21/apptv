@@ -48,7 +48,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     node.requestFocus();
-    // _allowStorage();
+    _allowStorage();
     initPlatformState();
     super.initState();
   }
