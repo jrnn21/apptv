@@ -13,7 +13,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:provider/provider.dart';
 import 'package:visibility_detector/visibility_detector.dart';
-import 'package:wakelock/wakelock.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 class LiveScreen extends StatefulWidget {
   const LiveScreen({super.key});
@@ -52,7 +52,7 @@ class _LiveScreenState extends State<LiveScreen> {
   @override
   void initState() {
     super.initState();
-    Wakelock.enable();
+    WakelockPlus.enable();
     autoTvScrollController.addListener(_onScroll);
     parseM3U();
   }
@@ -66,7 +66,7 @@ class _LiveScreenState extends State<LiveScreen> {
     focusNodePlayer.dispose();
     timer.cancel();
 
-    Wakelock.disable();
+    WakelockPlus.disable();
     super.dispose();
   }
 

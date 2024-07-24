@@ -13,7 +13,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import 'package:scroll_to_index/scroll_to_index.dart';
-import 'package:wakelock/wakelock.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 // ignore: must_be_immutable
 class SeriesPlaylistScreen extends StatefulWidget {
@@ -51,7 +51,7 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
 
   @override
   void initState() {
-    Wakelock.enable();
+    WakelockPlus.enable();
     autoScrollController = AutoScrollController(
       viewportBoundaryGetter: () =>
           Rect.fromLTRB(0, 0, 0, MediaQuery.of(context).padding.bottom),
@@ -77,7 +77,7 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
     focusNodePlayer.dispose();
     showBannerTimer.cancel();
     showPlayerTimer.cancel();
-    Wakelock.disable();
+    WakelockPlus.disable();
     super.dispose();
   }
 
