@@ -482,6 +482,28 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
     }
   }
 
+  _playPrew() {
+    if (selectIndex > 0) {
+      int prewId = selectIndex - 1;
+      setState(() {
+        selectIndex = prewId;
+      });
+      controller.setControlsVisibility(true);
+      _play(widget.playlists[prewId]);
+    }
+  }
+
+  _playNext() {
+    if (widget.playlists.length > selectIndex + 1) {
+      int nextId = selectIndex + 1;
+      setState(() {
+        selectIndex = nextId;
+      });
+      controller.setControlsVisibility(true);
+      _play(widget.playlists[nextId]);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     TimeExpire timeExpire = context.watch<ExpireProvider>().timer;
@@ -888,7 +910,9 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
                                         child: InkWell(
                                           borderRadius:
                                               BorderRadius.circular(100),
-                                          onTap: () {},
+                                          onTap: () {
+                                            _playPrew();
+                                          },
                                           child: Container(
                                             padding: const EdgeInsets.all(2),
                                             child: const Icon(
@@ -1002,7 +1026,9 @@ class _SeriesPlaylistScreenState extends State<SeriesPlaylistScreen> {
                                         child: InkWell(
                                           borderRadius:
                                               BorderRadius.circular(100),
-                                          onTap: () {},
+                                          onTap: () {
+                                            _playNext();
+                                          },
                                           child: Container(
                                             padding: const EdgeInsets.all(2),
                                             child: const Icon(
