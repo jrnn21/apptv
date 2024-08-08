@@ -59,6 +59,8 @@ class _LiveScreenState extends State<LiveScreen> {
   Timer showTvListTimer =
       Timer.periodic(const Duration(seconds: 10), (timer) {});
   String eeee = 'Unknown';
+  bool canPlay = false;
+  Timer playAgainTimer = Timer.periodic(const Duration(seconds: 5), (timer) {});
 
   @override
   void initState() {
@@ -77,6 +79,7 @@ class _LiveScreenState extends State<LiveScreen> {
     focusNodePlayer.dispose();
     timerlist.cancel();
     showTvListTimer.cancel();
+    playAgainTimer.cancel();
     WakelockPlus.disable();
     super.dispose();
   }
@@ -99,16 +102,13 @@ class _LiveScreenState extends State<LiveScreen> {
       Future.delayed(const Duration(milliseconds: 1500), () {
         controller
           ..initialize().then((_) async {
-            controller.play();
-
             setState(() {
               resolution =
                   '${controller.value.size.width.toInt()}x${controller.value.size.height.toInt()}';
             });
+            controller.play();
           })
-          ..addListener(() {
-            _listener();
-          });
+          ..addListener(_listener);
         hidePlayerButton();
       });
 
@@ -129,12 +129,12 @@ class _LiveScreenState extends State<LiveScreen> {
   }
 
   void _reconnect() {
-    Future.delayed(const Duration(seconds: 5), () {
+    playAgainTimer.cancel();
+    playAgainTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
       if (errorPlay.isNotEmpty) {
         setState(() {
           errorPlay = '';
         });
-        controller.dispose();
         _play(tv);
       }
     });
@@ -147,42 +147,48 @@ class _LiveScreenState extends State<LiveScreen> {
       errorPlay = '';
     });
     _showTvDetails();
+    controller.removeListener(_listener);
     controller.dispose();
     controller = VideoPlayerController.networkUrl(Uri.parse(m.link))
       ..initialize().then((_) async {
-        controller.play();
         setState(() {
           resolution =
               '${controller.value.size.width.toInt()}x${controller.value.size.height.toInt()}';
         });
+        controller.play();
       }).catchError((error) {
         setState(() {
           errorPlay = 'Link Server Error!';
         });
         _reconnect();
       })
-      ..addListener(() {
-        _listener();
-      });
+      ..addListener(_listener);
   }
 
   _listener() {
     loadPlayer = controller.value.isBuffering;
+
     if (controller.value.isPlaying) {
       loadPlayer = false;
     }
-    if (controller.value.buffered.isNotEmpty) {
-      durationInSeconds = controller.value.buffered.last.end.inSeconds;
-    }
+    // if (controller.value.buffered.isNotEmpty) {
+    //   durationInSeconds = controller.value.buffered.last.end.inSeconds;
+    // }
     if (controller.value.hasError) {
       errorPlay = 'Link Server Error!';
       eeee = controller.value.errorDescription!;
       _reconnect();
     }
-    if (controller.value.isCompleted) {
+    // print(controller.value.buffered);
+    if (controller.value.buffered.isNotEmpty &&
+        controller.value.buffered[0].end.toString() == '0:00:00.001000') {
+      // print('----------------------------------------------end');
+      setState(() {
+        loadPlayer = true;
+      });
       controller.play();
     }
-    currentDuration = controller.value.position.inSeconds.toDouble();
+
     setState(() {});
   }
 
@@ -762,46 +768,83 @@ class _LiveScreenState extends State<LiveScreen> {
               color: const Color.fromARGB(255, 27, 27, 27).withOpacity(0.8),
               border: const Border(right: BorderSide(color: Colors.white12)),
             ),
-            child: ListView(
-              controller: autoTvScrollController,
-              scrollDirection: Axis.vertical,
-              children: UnmodifiableListView(show
-                  ? [
-                      ...playlistPages
-                          .asMap()
-                          .map((i, e) => MapEntry(
-                              i,
-                              TvCom(
-                                autoTvScrollController: autoTvScrollController,
-                                ontap: () {
-                                  _play(e);
-                                  setState(() {
-                                    selectedIndexTv = i;
-                                    playlistFilterPlay = playlistFilter;
-                                    selectedTv = true;
-                                    selectedIndexPlay = selectedIndex;
-                                    gtSelectedPlay = gtSelected;
-                                    selectedIndexTvPlayed = i;
-                                    currPagePlay = currentPage - 1;
-                                  });
+            child: Column(
+              children: [
+                InkWell(
+                  onTap: () {
+                    hidePlayerButton();
+                    setState(() {
+                      selectedTv = !selectedTv;
+                    });
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    height: 40,
+                    child: Row(
+                      children: [
+                        Icon(
+                            selectedTv
+                                ? Icons.arrow_back_ios
+                                : Icons.arrow_forward_ios,
+                            color: Colors.blueAccent,
+                            size: 18),
+                        Text(
+                          '${selectedTv ? 'ប្រភេទ' : ''}ប៉ុស្តិ៍ទូរទស្សន៍',
+                          style: const TextStyle(
+                              fontFamily: 'koulen',
+                              fontSize: 16,
+                              color: Colors.blueAccent),
+                        )
+                      ],
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: ListView(
+                    controller: autoTvScrollController,
+                    scrollDirection: Axis.vertical,
+                    children: UnmodifiableListView(show
+                        ? [
+                            ...playlistPages
+                                .asMap()
+                                .map((i, e) => MapEntry(
+                                    i,
+                                    TvCom(
+                                      autoTvScrollController:
+                                          autoTvScrollController,
+                                      ontap: () {
+                                        _play(e);
+                                        setState(() {
+                                          selectedIndexTv = i;
+                                          playlistFilterPlay = playlistFilter;
+                                          selectedTv = true;
+                                          selectedIndexPlay = selectedIndex;
+                                          gtSelectedPlay = gtSelected;
+                                          selectedIndexTvPlayed = i;
+                                          currPagePlay = currentPage - 1;
+                                        });
 
-                                  autoTvScrollController.animateTo((i - 4) * 50,
-                                      duration:
-                                          const Duration(milliseconds: 200),
-                                      curve: Curves.linear);
-                                  setState(() {
-                                    selectedIndexTv = i;
-                                  });
-                                },
-                                i: i,
-                                e: e,
-                                selectedIndexTv: selectedIndexTv,
-                                selectedTv: selectedTv,
-                              )))
-                          .values,
-                      // const SizedBox(height: 400),
-                    ]
-                  : []),
+                                        autoTvScrollController.animateTo(
+                                            (i - 4) * 50,
+                                            duration: const Duration(
+                                                milliseconds: 200),
+                                            curve: Curves.linear);
+                                        setState(() {
+                                          selectedIndexTv = i;
+                                        });
+                                      },
+                                      i: i,
+                                      e: e,
+                                      selectedIndexTv: selectedIndexTv,
+                                      selectedTv: selectedTv,
+                                    )))
+                                .values,
+                            // const SizedBox(height: 400),
+                          ]
+                        : []),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
